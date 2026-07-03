@@ -1,0 +1,145 @@
+name: Generate Short Video
+
+on:
+  workflow_dispatch:          # allow manual test trigger
+
+permissions:
+  contents: write             # needed to commit published_topics.json + voice_state.json
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  generate-and-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      PYTHONUNBUFFERED: "1"
+      BROLL_SEGMENT_BUDGET_SECONDS: "180"
+      JUDGE_MAX_ATTEMPTS: "6"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install FFmpeg
+        run: sudo apt-get install -y --no-install-recommends ffmpeg
+
+      - name: Install Bebas Neue Font
+        run: |
+          sudo mkdir -p /usr/local/share/fonts
+          sudo wget -O /usr/local/share/fonts/BebasNeue-Regular.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/bebasneue/BebasNeue-Regular.ttf
+          sudo fc-cache -fv
+
+
+      - name: Cache faster-whisper models
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface/hub
+          key: ${{ runner.os }}-whisper-base-v1
+          restore-keys: |
+            ${{ runner.os }}-whisper-
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate Short
+        timeout-minutes: 70
+        env:
+          GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
+          PEXELS_API_KEY:    ${{ secrets.PEXELS_API_KEY }}
+          PIXABAY_API_KEY:   ${{ secrets.PIXABAY_API_KEY }}
+          YT_CLIENT_ID:      ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET:  ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN:  ${{ secrets.YT_REFRESH_TOKEN }}
+          COVERR_API_KEY:    ${{ secrets.COVERR_API_KEY }}
+          NASA_API_KEY:      ${{ secrets.NASA_API_KEY }}
+          KLIPY_API_KEY:     ${{ secrets.KLIPY_API_KEY }}
+          GEMINI_API_KEYS:   ${{ secrets.GEMINI_API_KEYS }}
+          GEMINI_JUDGE_API_KEY: ${{ secrets.GEMINI_JUDGE_API_KEY }}
+          FREESOUND_API_KEY: ${{ secrets.FREESOUND_API_KEY }}
+          BYPASS_VISION_MATCH: "0"
+        run: |
+          for attempt in 1 2; do
+            echo "Generate attempt ${attempt}/2"
+            resume_arg=""
+            if [ "$attempt" -gt 1 ] && [ -d output ]; then
+              resume_arg="--resume"
+            fi
+            timeout 32m python run_generate.py --format short $resume_arg && exit 0
+            code=$?
+            if [ "$code" -eq 124 ]; then
+              echo "Generate attempt ${attempt} timed out"
+            else
+              echo "Generate attempt ${attempt} failed with exit ${code}"
+            fi
+            if [ "$attempt" -eq 1 ]; then
+              echo "Waiting 16 minutes before retry to let free API cooldowns clear"
+              sleep 960
+            fi
+          done
+          exit 1
+
+      - name: Publish to YouTube
+        timeout-minutes: 20
+        env:
+          DM_API_KEY:       ${{ secrets.DM_API_KEY }}
+          DM_API_SECRET:    ${{ secrets.DM_API_SECRET }}
+          DM_USERNAME:      ${{ secrets.DM_USERNAME }}
+          DM_PASSWORD:      ${{ secrets.DM_PASSWORD }}
+          RUMBLE_EMAIL:      ${{ secrets.RUMBLE_EMAIL }}
+          RUMBLE_PASSWORD:   ${{ secrets.RUMBLE_PASSWORD }}
+          FB_PAGE_ID:        ${{ secrets.FB_PAGE_ID }}
+          FB_PAGE_TOKEN:     ${{ secrets.FB_PAGE_TOKEN }}
+          IG_USER_ID:        ${{ secrets.IG_USER_ID }}
+          THREADS_USER_ID:      ${{ secrets.THREADS_USER_ID }}
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          YT_CLIENT_ID:      ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET:  ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN:  ${{ secrets.YT_REFRESH_TOKEN }}
+          GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEYS:   ${{ secrets.GEMINI_API_KEYS }}
+          GEMINI_JUDGE_API_KEY: ${{ secrets.GEMINI_JUDGE_API_KEY }}
+        run: |
+          for attempt in 1 2 3; do
+            echo "Publish attempt ${attempt}/3"
+            timeout 15m python run_publish.py && exit 0
+            code=$?
+            echo "Publish attempt ${attempt} failed with exit ${code}"
+            if [ "$attempt" -lt 3 ]; then
+              sleep $((attempt * 120))
+            fi
+          done
+          exit 1
+
+      - name: Upload video artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: short-video-${{ github.run_id }}
+          path: |
+            output/final_short.mp4
+            output/thumbnail.jpg
+            output/metadata.json
+            output/judge_report.json
+            output/topic.json
+            output/script.json
+          retention-days: 7
+
+      - name: Commit state files
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add published_topics.json 2>/dev/null || true
+          git add voice_state.json 2>/dev/null || true
+          git add gemini_state.json 2>/dev/null || true
+          git add thumbnail_state.json 2>/dev/null || true
+          git add cache_music/ 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "chore: update pipeline state [skip ci]"
+          git push || true

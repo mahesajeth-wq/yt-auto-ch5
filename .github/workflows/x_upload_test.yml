@@ -1,0 +1,497 @@
+name: X Upload Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-ch1:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Restore cookies cache
+        uses: actions/cache@v4
+        with:
+          path: cookies_ch1.json
+          key: x-cookies-ch1-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            x-cookies-ch1-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade git+https://github.com/unclecode/twikit.git yt-dlp requests
+
+      - name: Download and upload
+        env:
+          X_USERNAME: ${{ secrets.X_USERNAME_CH1 }}
+          X_EMAIL: ${{ secrets.X_EMAIL_CH1 }}
+          X_PASSWORD: ${{ secrets.X_PASSWORD_CH1 }}
+          X_COOKIES: ${{ secrets.X_COOKIES_CH1 }}
+          YT_URL: ${{ secrets.LAST_YT_URL_CH1 }}
+          COOKIE_FILE: cookies_ch1.json
+          TARGET_REPO: yt-auto
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -c '
+          import os, asyncio, subprocess, requests, zipfile, io
+          from twikit import Client
+          async def main():
+              username = os.environ.get("X_USERNAME", "").strip()
+              email = os.environ.get("X_EMAIL", "").strip()
+              password = os.environ.get("X_PASSWORD", "").strip()
+              cookies_secret = os.environ.get("X_COOKIES", "").strip()
+              yt_url = os.environ.get("YT_URL", "").strip()
+              cookie_file = os.environ.get("COOKIE_FILE", "").strip()
+              target_repo = os.environ.get("TARGET_REPO", "").strip()
+              token = os.environ.get("GITHUB_TOKEN", "").strip()
+              
+              if cookies_secret:
+                  print("Saving cookies from secrets...")
+                  with open(cookie_file, "w") as f:
+                      f.write(cookies_secret)
+
+              downloaded = False
+              if target_repo:
+                  print(f"Attempting to download latest artifact from {target_repo}...")
+                  headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"}
+                  try:
+                      r = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs?status=success&per_page=1", headers=headers, timeout=20)
+                      r.raise_for_status()
+                      runs = r.json().get("workflow_runs", [])
+                      if runs:
+                          run_id = runs[0]["id"]
+                          r_art = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs/{run_id}/artifacts", headers=headers, timeout=20)
+                          r_art.raise_for_status()
+                          arts = r_art.json().get("artifacts", [])
+                          if arts:
+                              art = arts[0]
+                              dl_url = art["archive_download_url"]
+                              art_name = art["name"]
+                              print(f"Downloading artifact: {art_name} ...")
+                              r_dl = requests.get(dl_url, headers=headers, timeout=60)
+                              r_dl.raise_for_status()
+                              z = zipfile.ZipFile(io.BytesIO(r_dl.content))
+                              z.extractall(".")
+                              mp4_files = [f for f in os.listdir(".") if f.endswith(".mp4")]
+                              if mp4_files:
+                                  os.rename(mp4_files[0], "output.mp4")
+                                  print(f"Artifact video extracted successfully: {mp4_files[0]}")
+                                  downloaded = True
+                  except Exception as e:
+                      print(f"Artifact download failed: {e}. Falling back to yt-dlp...")
+
+              if not downloaded:
+                  if not yt_url:
+                      raise FileNotFoundError("No YT URL available and artifact download failed.")
+                  print(f"Downloading from YouTube: {yt_url}")
+                  subprocess.run(["yt-dlp", "-o", "output.mp4", "-f", "mp4", "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", yt_url], check=True)
+
+              client = Client("en-US")
+              if os.path.exists(cookie_file) and os.path.getsize(cookie_file) > 10:
+                  print("Loading cookies...")
+                  try:
+                      client.load_cookies(cookie_file)
+                      print("Cookies loaded successfully.")
+                  except Exception as e:
+                      print(f"Cookie load failed: {e}.")
+                      if not username or not password or not email:
+                          raise ValueError("Cookies failed and missing username/password.")
+                      print("Falling back to login...")
+                      await client.login(auth_info_1=username, auth_info_2=email, password=password)
+                      client.save_cookies(cookie_file)
+              else:
+                  if not username or not password or not email:
+                      raise ValueError("No cookies file and X credentials missing.")
+                  print("Logging in...")
+                  try:
+                      await client.login(auth_info_1=username, auth_info_2=email, password=password)
+                      client.save_cookies(cookie_file)
+                  except Exception as e:
+                      print(f"Login failed: {e}")
+                      print("IMPORTANT: Cloudflare may be blocking credentials login. Export cookies from your browser and set them in X_COOKIES secret.")
+                      raise
+                  
+              print("Uploading media...")
+              media_id = await client.upload_media("output.mp4")
+              print("Creating tweet...")
+              tweet = await client.create_tweet(text="Check out our latest video!", media_ids=[media_id])
+              print(f"Success! Tweet ID: {tweet.id}")
+          asyncio.run(main())
+          '
+
+  test-ch2:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Restore cookies cache
+        uses: actions/cache@v4
+        with:
+          path: cookies_ch2.json
+          key: x-cookies-ch2-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            x-cookies-ch2-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade git+https://github.com/unclecode/twikit.git yt-dlp requests
+
+      - name: Download and upload
+        env:
+          X_USERNAME: ${{ secrets.X_USERNAME_CH2 }}
+          X_EMAIL: ${{ secrets.X_EMAIL_CH2 }}
+          X_PASSWORD: ${{ secrets.X_PASSWORD_CH2 }}
+          X_COOKIES: ${{ secrets.X_COOKIES_CH2 }}
+          YT_URL: ${{ secrets.LAST_YT_URL_CH2 }}
+          COOKIE_FILE: cookies_ch2.json
+          TARGET_REPO: yt-auto-ch2
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -c '
+          import os, asyncio, subprocess, requests, zipfile, io
+          from twikit import Client
+          async def main():
+              username = os.environ.get("X_USERNAME", "").strip()
+              email = os.environ.get("X_EMAIL", "").strip()
+              password = os.environ.get("X_PASSWORD", "").strip()
+              cookies_secret = os.environ.get("X_COOKIES", "").strip()
+              yt_url = os.environ.get("YT_URL", "").strip()
+              cookie_file = os.environ.get("COOKIE_FILE", "").strip()
+              target_repo = os.environ.get("TARGET_REPO", "").strip()
+              token = os.environ.get("GITHUB_TOKEN", "").strip()
+              
+              if cookies_secret:
+                  print("Saving cookies from secrets...")
+                  with open(cookie_file, "w") as f:
+                      f.write(cookies_secret)
+
+              downloaded = False
+              if target_repo:
+                  print(f"Attempting to download latest artifact from {target_repo}...")
+                  headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"}
+                  try:
+                      r = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs?status=success&per_page=1", headers=headers, timeout=20)
+                      r.raise_for_status()
+                      runs = r.json().get("workflow_runs", [])
+                      if runs:
+                          run_id = runs[0]["id"]
+                          r_art = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs/{run_id}/artifacts", headers=headers, timeout=20)
+                          r_art.raise_for_status()
+                          arts = r_art.json().get("artifacts", [])
+                          if arts:
+                              art = arts[0]
+                              dl_url = art["archive_download_url"]
+                              art_name = art["name"]
+                              print(f"Downloading artifact: {art_name} ...")
+                              r_dl = requests.get(dl_url, headers=headers, timeout=60)
+                              r_dl.raise_for_status()
+                              z = zipfile.ZipFile(io.BytesIO(r_dl.content))
+                              z.extractall(".")
+                              mp4_files = [f for f in os.listdir(".") if f.endswith(".mp4")]
+                              if mp4_files:
+                                  os.rename(mp4_files[0], "output.mp4")
+                                  print(f"Artifact video extracted successfully: {mp4_files[0]}")
+                                  downloaded = True
+                  except Exception as e:
+                      print(f"Artifact download failed: {e}. Falling back to yt-dlp...")
+
+              if not downloaded:
+                  if not yt_url:
+                      raise FileNotFoundError("No YT URL available and artifact download failed.")
+                  print(f"Downloading from YouTube: {yt_url}")
+                  subprocess.run(["yt-dlp", "-o", "output.mp4", "-f", "mp4", "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", yt_url], check=True)
+
+              client = Client("en-US")
+              if os.path.exists(cookie_file) and os.path.getsize(cookie_file) > 10:
+                  print("Loading cookies...")
+                  try:
+                      client.load_cookies(cookie_file)
+                      print("Cookies loaded successfully.")
+                  except Exception as e:
+                      print(f"Cookie load failed: {e}.")
+                      if not username or not password or not email:
+                          raise ValueError("Cookies failed and missing username/password.")
+                      print("Falling back to login...")
+                      await client.login(auth_info_1=username, auth_info_2=email, password=password)
+                      client.save_cookies(cookie_file)
+              else:
+                  if not username or not password or not email:
+                      raise ValueError("No cookies file and X credentials missing.")
+                  print("Logging in...")
+                  try:
+                      await client.login(auth_info_1=username, auth_info_2=email, password=password)
+                      client.save_cookies(cookie_file)
+                  except Exception as e:
+                      print(f"Login failed: {e}")
+                      print("IMPORTANT: Cloudflare may be blocking credentials login. Export cookies from your browser and set them in X_COOKIES secret.")
+                      raise
+                  
+              print("Uploading media...")
+              media_id = await client.upload_media("output.mp4")
+              print("Creating tweet...")
+              tweet = await client.create_tweet(text="Check out our latest video!", media_ids=[media_id])
+              print(f"Success! Tweet ID: {tweet.id}")
+          asyncio.run(main())
+          '
+
+  test-ch3:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Restore cookies cache
+        uses: actions/cache@v4
+        with:
+          path: cookies_ch3.json
+          key: x-cookies-ch3-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            x-cookies-ch3-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade git+https://github.com/unclecode/twikit.git yt-dlp requests
+
+      - name: Download and upload
+        env:
+          X_USERNAME: ${{ secrets.X_USERNAME_CH3 }}
+          X_EMAIL: ${{ secrets.X_EMAIL_CH3 }}
+          X_PASSWORD: ${{ secrets.X_PASSWORD_CH3 }}
+          X_COOKIES: ${{ secrets.X_COOKIES_CH3 }}
+          YT_URL: ${{ secrets.LAST_YT_URL_CH3 }}
+          COOKIE_FILE: cookies_ch3.json
+          TARGET_REPO: yt-auto-ch3
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -c '
+          import os, asyncio, subprocess, requests, zipfile, io
+          from twikit import Client
+          async def main():
+              username = os.environ.get("X_USERNAME", "").strip()
+              email = os.environ.get("X_EMAIL", "").strip()
+              password = os.environ.get("X_PASSWORD", "").strip()
+              cookies_secret = os.environ.get("X_COOKIES", "").strip()
+              yt_url = os.environ.get("YT_URL", "").strip()
+              cookie_file = os.environ.get("COOKIE_FILE", "").strip()
+              target_repo = os.environ.get("TARGET_REPO", "").strip()
+              token = os.environ.get("GITHUB_TOKEN", "").strip()
+              
+              if cookies_secret:
+                  print("Saving cookies from secrets...")
+                  with open(cookie_file, "w") as f:
+                      f.write(cookies_secret)
+
+              downloaded = False
+              if target_repo:
+                  print(f"Attempting to download latest artifact from {target_repo}...")
+                  headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"}
+                  try:
+                      r = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs?status=success&per_page=1", headers=headers, timeout=20)
+                      r.raise_for_status()
+                      runs = r.json().get("workflow_runs", [])
+                      if runs:
+                          run_id = runs[0]["id"]
+                          r_art = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs/{run_id}/artifacts", headers=headers, timeout=20)
+                          r_art.raise_for_status()
+                          arts = r_art.json().get("artifacts", [])
+                          if arts:
+                              art = arts[0]
+                              dl_url = art["archive_download_url"]
+                              art_name = art["name"]
+                              print(f"Downloading artifact: {art_name} ...")
+                              r_dl = requests.get(dl_url, headers=headers, timeout=60)
+                              r_dl.raise_for_status()
+                              z = zipfile.ZipFile(io.BytesIO(r_dl.content))
+                              z.extractall(".")
+                              mp4_files = [f for f in os.listdir(".") if f.endswith(".mp4")]
+                              if mp4_files:
+                                  os.rename(mp4_files[0], "output.mp4")
+                                  print(f"Artifact video extracted successfully: {mp4_files[0]}")
+                                  downloaded = True
+                  except Exception as e:
+                      print(f"Artifact download failed: {e}. Falling back to yt-dlp...")
+
+              if not downloaded:
+                  if not yt_url:
+                      raise FileNotFoundError("No YT URL available and artifact download failed.")
+                  print(f"Downloading from YouTube: {yt_url}")
+                  subprocess.run(["yt-dlp", "-o", "output.mp4", "-f", "mp4", "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", yt_url], check=True)
+
+              client = Client("en-US")
+              if os.path.exists(cookie_file) and os.path.getsize(cookie_file) > 10:
+                  print("Loading cookies...")
+                  try:
+                      client.load_cookies(cookie_file)
+                      print("Cookies loaded successfully.")
+                  except Exception as e:
+                      print(f"Cookie load failed: {e}.")
+                      if not username or not password or not email:
+                          raise ValueError("Cookies failed and missing username/password.")
+                      print("Falling back to login...")
+                      await client.login(auth_info_1=username, auth_info_2=email, password=password)
+                      client.save_cookies(cookie_file)
+              else:
+                  if not username or not password or not email:
+                      raise ValueError("No cookies file and X credentials missing.")
+                  print("Logging in...")
+                  try:
+                      await client.login(auth_info_1=username, auth_info_2=email, password=password)
+                      client.save_cookies(cookie_file)
+                  except Exception as e:
+                      print(f"Login failed: {e}")
+                      print("IMPORTANT: Cloudflare may be blocking credentials login. Export cookies from your browser and set them in X_COOKIES secret.")
+                      raise
+                  
+              print("Uploading media...")
+              media_id = await client.upload_media("output.mp4")
+              print("Creating tweet...")
+              tweet = await client.create_tweet(text="Check out our latest video!", media_ids=[media_id])
+              print(f"Success! Tweet ID: {tweet.id}")
+          asyncio.run(main())
+          '
+
+  test-ch4:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Restore cookies cache
+        uses: actions/cache@v4
+        with:
+          path: cookies_ch4.json
+          key: x-cookies-ch4-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            x-cookies-ch4-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install --upgrade git+https://github.com/unclecode/twikit.git yt-dlp requests
+
+      - name: Download and upload
+        env:
+          X_USERNAME: ${{ secrets.X_USERNAME_CH4 }}
+          X_EMAIL: ${{ secrets.X_EMAIL_CH4 }}
+          X_PASSWORD: ${{ secrets.X_PASSWORD_CH4 }}
+          X_COOKIES: ${{ secrets.X_COOKIES_CH4 }}
+          YT_URL: ${{ secrets.LAST_YT_URL_CH4 }}
+          COOKIE_FILE: cookies_ch4.json
+          TARGET_REPO: yt-auto-ch4
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python -c '
+          import os, asyncio, subprocess, requests, zipfile, io
+          from twikit import Client
+          async def main():
+              username = os.environ.get("X_USERNAME", "").strip()
+              email = os.environ.get("X_EMAIL", "").strip()
+              password = os.environ.get("X_PASSWORD", "").strip()
+              cookies_secret = os.environ.get("X_COOKIES", "").strip()
+              yt_url = os.environ.get("YT_URL", "").strip()
+              cookie_file = os.environ.get("COOKIE_FILE", "").strip()
+              target_repo = os.environ.get("TARGET_REPO", "").strip()
+              token = os.environ.get("GITHUB_TOKEN", "").strip()
+              
+              if cookies_secret:
+                  print("Saving cookies from secrets...")
+                  with open(cookie_file, "w") as f:
+                      f.write(cookies_secret)
+
+              downloaded = False
+              if target_repo:
+                  print(f"Attempting to download latest artifact from {target_repo}...")
+                  headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json"}
+                  try:
+                      r = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs?status=success&per_page=1", headers=headers, timeout=20)
+                      r.raise_for_status()
+                      runs = r.json().get("workflow_runs", [])
+                      if runs:
+                          run_id = runs[0]["id"]
+                          r_art = requests.get(f"https://api.github.com/repos/gurination1/{target_repo}/actions/runs/{run_id}/artifacts", headers=headers, timeout=20)
+                          r_art.raise_for_status()
+                          arts = r_art.json().get("artifacts", [])
+                          if arts:
+                              art = arts[0]
+                              dl_url = art["archive_download_url"]
+                              art_name = art["name"]
+                              print(f"Downloading artifact: {art_name} ...")
+                              r_dl = requests.get(dl_url, headers=headers, timeout=60)
+                              r_dl.raise_for_status()
+                              z = zipfile.ZipFile(io.BytesIO(r_dl.content))
+                              z.extractall(".")
+                              mp4_files = [f for f in os.listdir(".") if f.endswith(".mp4")]
+                              if mp4_files:
+                                  os.rename(mp4_files[0], "output.mp4")
+                                  print(f"Artifact video extracted successfully: {mp4_files[0]}")
+                                  downloaded = True
+                  except Exception as e:
+                      print(f"Artifact download failed: {e}. Falling back to yt-dlp...")
+
+              if not downloaded:
+                  if not yt_url:
+                      raise FileNotFoundError("No YT URL available and artifact download failed.")
+                  print(f"Downloading from YouTube: {yt_url}")
+                  subprocess.run(["yt-dlp", "-o", "output.mp4", "-f", "mp4", "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", yt_url], check=True)
+
+              client = Client("en-US")
+              if os.path.exists(cookie_file) and os.path.getsize(cookie_file) > 10:
+                  print("Loading cookies...")
+                  try:
+                      client.load_cookies(cookie_file)
+                      print("Cookies loaded successfully.")
+                  except Exception as e:
+                      print(f"Cookie load failed: {e}.")
+                      if not username or not password or not email:
+                          raise ValueError("Cookies failed and missing username/password.")
+                      print("Falling back to login...")
+                      await client.login(auth_info_1=username, auth_info_2=email, password=password)
+                      client.save_cookies(cookie_file)
+              else:
+                  if not username or not password or not email:
+                      raise ValueError("No cookies file and X credentials missing.")
+                  print("Logging in...")
+                  try:
+                      await client.login(auth_info_1=username, auth_info_2=email, password=password)
+                      client.save_cookies(cookie_file)
+                  except Exception as e:
+                      print(f"Login failed: {e}")
+                      print("IMPORTANT: Cloudflare may be blocking credentials login. Export cookies from your browser and set them in X_COOKIES secret.")
+                      raise
+                  
+              print("Uploading media...")
+              media_id = await client.upload_media("output.mp4")
+              print("Creating tweet...")
+              tweet = await client.create_tweet(text="Check out our latest video!", media_ids=[media_id])
+              print(f"Success! Tweet ID: {tweet.id}")
+          asyncio.run(main())
+          '

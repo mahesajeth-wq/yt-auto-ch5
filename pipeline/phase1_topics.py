@@ -1,0 +1,116 @@
+import os
+import json
+from pipeline.config import TOPIC_LOG_SIZE, BUSINESS_HISTORY_SUBCLUSTERS
+from pipeline.gemini import GeminiClient, _robust_json_loads
+
+def select_topic(format_type: str) -> dict:
+    # ── 1. Load published topics log ─────────────────────────────────────────
+    topic_log_path = "published_topics.json"
+    if os.path.exists(topic_log_path):
+        try:
+            with open(topic_log_path, "r") as f:
+                data = json.load(f)
+                published = data.get("topics", [])
+                subcluster_idx = data.get("subcluster_idx", 0)
+                call_count = data.get("call_count", 0)
+        except Exception as e:
+            print(f"Warning: Failed to load published topics: {e}")
+            published = []; subcluster_idx = 0; call_count = 0
+    else:
+        published = []; subcluster_idx = 0; call_count = 0
+
+    recent_topics = published[-TOPIC_LOG_SIZE:]
+    call_count += 1
+
+    # ── 2. Determine subcluster + evergreen vs trending ──────────────────────
+    current_subcluster = BUSINESS_HISTORY_SUBCLUSTERS[subcluster_idx % len(BUSINESS_HISTORY_SUBCLUSTERS)]
+    is_trending = (call_count % 3 != 0)   # 2 out of 3 calls = trending topic
+
+    if is_trending:
+        topic_instruction = (
+            f"Generate 5 TRENDING topics about {current_subcluster} "
+            f"that are currently making news or connect perfectly to recent economic, business, or market events. "
+            f"Frame each as a timely analysis of a business decision, strategy, or financial scandal."
+        )
+    else:
+        topic_instruction = (
+            f"Generate 5 EVERGREEN topics about {current_subcluster}. "
+            f"Each must reveal a bizarre, counterintuitive, or little-known business fact or history "
+            f"that educated adults don't know. Frame as 'What if X happened' or 'How Y actually works'. "
+            f"Every topic MUST name a specific company, founder, campaign, or phenomenon — "
+            f"NOT a vague 'business is surprised' hook."
+        )
+
+    # ── 3. Build Gemini prompt ───────────────────────────────────────────────
+    prompt = f"""{topic_instruction}
+
+Sub-cluster focus for this batch: {current_subcluster}
+
+CRITICAL: Do NOT suggest any topic similar to these recently published topics:
+{json.dumps(recent_topics, indent=2)}
+
+SAFETY & COMPLIANCE CONSTRAINTS (MANDATORY):
+- The topics MUST be 100% advertiser-friendly, family-friendly, and compliant with YouTube/Meta community guidelines.
+- Strictly AVOID: medical advice, health/cure claims, Covid-19/vaccine/epidemic speculation, dangerous stunts/activities, illegal substances, or weapons.
+- Avoid political controversies, conspiracy theories, or tragic/graphic events.
+- Focus on educational, curious, and inspiring business and economic history.
+
+AVOID: Nature, marine biology, space, engineering, pure science.
+FOCUS: Business, economic history, advertising, corporate collapses, startups, product failures, and monopolies.
+
+Return ONLY a raw JSON array of objects. No markdown, no preamble.
+Each object must have exactly these fields:
+- "topic": specific subject with a named fact, theory, or mechanism (e.g. "Quantum entanglement enables faster than light simulation without moving particles")
+- "short_hook": opening question or statement, 8 words or less, creates a strong information gap
+- "hook_type": one of "curiosity_gap", "contrarian", "time_pressure", "self_identification", "narrative_pull"
+- "for_format": "short", "long", or "both"
+- "subcluster": the sub-cluster this belongs to (string)
+"""
+
+    print(f"[Phase1] Requesting topics — subcluster: {current_subcluster} | trending: {is_trending}")
+    client = GeminiClient()
+    response_text = client.generate_text(prompt, use_grounding=is_trending, temperature=0.75)
+
+    try:
+        topics_list = _robust_json_loads(response_text)
+        if not isinstance(topics_list, list):
+            raise ValueError("Response is not a JSON list")
+        if not topics_list:
+            raise ValueError("Response is an empty list")
+    except Exception as e:
+        print(f"Error parsing topics: {e}")
+        topics_list = [
+            {
+                "topic": "Why quantum computers don't melt at absolute zero",
+                "short_hook": "How quantum computers beat the heat.",
+                "hook_type": "curiosity_gap",
+                "for_format": "both",
+                "subcluster": current_subcluster
+            }
+        ]
+
+    # ── 4. Pick first topic matching format_type ──────────────────────────────
+    selected_topic = None
+    for item in topics_list:
+        if item.get("for_format", "both") in (format_type, "both"):
+            selected_topic = item
+            break
+    if not selected_topic:
+        selected_topic = topics_list[0]
+        selected_topic["for_format"] = format_type
+
+    print(f"[Phase1] Selected: {selected_topic['topic']}")
+
+    # ── 5. Persist state ──────────────────────────────────────────────────────
+    published.append(selected_topic["topic"])
+    published = published[-TOPIC_LOG_SIZE:]
+    next_subcluster_idx = (subcluster_idx + 1) % len(SCIENCE_SUBCLUSTERS)
+
+    with open(topic_log_path, "w") as f:
+        json.dump({
+            "topics": published,
+            "subcluster_idx": next_subcluster_idx,
+            "call_count": call_count
+        }, f, indent=2)
+
+    return selected_topic

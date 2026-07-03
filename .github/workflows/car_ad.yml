@@ -1,0 +1,94 @@
+name: Car Ad Video Pipeline
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: 'Google Drive URL or direct URL of the raw video'
+        required: true
+        default: 'https://drive.google.com/file/d/1mRZizR7hJOGZY9KIkHaNCe1zWBJ-uhzi/view?usp=drivesdk'
+
+permissions:
+  contents: read
+
+jobs:
+  build-car-ad:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install FFmpeg
+        run: sudo apt-get install -y --no-install-recommends ffmpeg
+
+      - name: Cache Whisper Models
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface/hub
+          key: ${{ runner.os }}-whisper-base-v1
+          restore-keys: |
+            ${{ runner.os }}-whisper-
+
+      - name: Install Dependencies
+        run: |
+          pip install requests faster-whisper numpy pillow soundfile gdown
+
+      - name: Download Raw Video
+        env:
+          VIDEO_URL: ${{ github.event.inputs.video_url }}
+        run: |
+          python -c '
+          import os, re, requests
+          url = os.environ.get("VIDEO_URL")
+          match = re.search(r"/file/d/([a-zA-Z0-9_-]+)", url) or re.search(r"id=([a-zA-Z0-9_-]+)", url)
+          if match:
+              file_id = match.group(1)
+              download_url = f"https://docs.google.com/uc?export=download&id={file_id}&confirm=t"
+              session = requests.Session()
+              response = session.get(download_url, stream=True)
+              token = None
+              for k, v in response.cookies.items():
+                  if k.startswith("download_warning"):
+                      token = v
+              if token:
+                  response = session.get(f"https://docs.google.com/uc?export=download&id={file_id}&confirm={token}", stream=True)
+              with open("raw_video.mp4", "wb") as f:
+                  for chunk in response.iter_content(32768):
+                      if chunk: f.write(chunk)
+              print("Download completed from Google Drive.")
+          else:
+              # Fallback to direct download
+              r = requests.get(url, stream=True)
+              with open("raw_video.mp4", "wb") as f:
+                  for chunk in r.iter_content(32768):
+                      if chunk: f.write(chunk)
+              print("Download completed from direct URL.")
+          '
+
+      - name: Run Pipeline
+        env:
+          GEMINI_API_KEYS: ${{ secrets.GEMINI_API_KEYS }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          python -m car_ad_pipeline.pipeline raw_video.mp4 ad_output
+
+      - name: Upload Finished Ad Artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: finished-car-ad-${{ github.run_id }}
+          path: |
+            ad_output/final_ad_video.mp4
+            ad_output/ad_script.json
+            ad_output/market_price_report.txt
+            ad_output/subtitles.ass
+            ad_output/temp/token_usage.log
+          retention-days: 7
