@@ -104,7 +104,7 @@ Each object must have exactly these fields:
     # ── 5. Persist state ──────────────────────────────────────────────────────
     published.append(selected_topic["topic"])
     published = published[-TOPIC_LOG_SIZE:]
-    next_subcluster_idx = (subcluster_idx + 1) % len(SCIENCE_SUBCLUSTERS)
+    next_subcluster_idx = (subcluster_idx + 1) % len(BUSINESS_HISTORY_SUBCLUSTERS)
 
     with open(topic_log_path, "w") as f:
         json.dump({
