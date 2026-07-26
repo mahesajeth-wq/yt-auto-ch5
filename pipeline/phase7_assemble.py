@@ -69,41 +69,41 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
             print(f"Bypassing scale/crop/pan for Hyperframes output: {broll_path}")
             vf_chain = "setsar=1"
         else:
-            # Base scale-crop to cover full bleed (no ugly black letterbox margins)
+            # Base scale-crop to cover full bleed with unsharp masking for enhanced clarity
             if motion_idx == 0:
-                # 1. Slow Cinematic Diagonal Pan Up-Right (Safe constant crop dimensions)
+                # 1. Slow Cinematic Diagonal Pan Up-Right
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2 + (t-{duration}/2)*15':'(in_h-out_h)/2 + (t-{duration}/2)*15',"
-                    f"eq=contrast=1.05:saturation=1.1:gamma=0.95,vignette=PI/7,setsar=1"
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1"
                 )
             elif motion_idx == 1:
                 # 2. Slow Panning Upward
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2 + (t-{duration}/2)*22',"
-                    f"eq=contrast=1.05:saturation=1.1:gamma=0.95,vignette=PI/7,setsar=1"
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1"
                 )
             elif motion_idx == 2:
                 # 3. Slow Panning Downward
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2 - (t-{duration}/2)*22',"
-                    f"eq=contrast=1.05:saturation=1.1:gamma=0.95,vignette=PI/7,setsar=1"
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1"
                 )
             elif motion_idx == 3:
                 # 4. Slow Panning Right
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2 + (t-{duration}/2)*22':'(in_h-out_h)/2',"
-                    f"eq=contrast=1.05:saturation=1.1:gamma=0.95,vignette=PI/7,setsar=1"
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1"
                 )
             else:
                 # 5. Slow Panning Left
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2 - (t-{duration}/2)*22':'(in_h-out_h)/2',"
-                    f"eq=contrast=1.05:saturation=1.1:gamma=0.95,vignette=PI/7,setsar=1"
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1"
                 )
             
         cmd = [

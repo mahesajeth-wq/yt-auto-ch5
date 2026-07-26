@@ -974,6 +974,7 @@ def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, dura
         else:
             print(f"[B-roll] Hyperframes execution error: {e}. Falling back to FFmpeg.")
 
+
     ext = os.path.splitext(img_path)[1].lower()
     is_video = ext in [".mp4", ".webm", ".ogv", ".mov", ".avi"]
     
@@ -1184,9 +1185,12 @@ def _expand_query(query: str, channel: str, n: int = 5) -> list[str]:
     from pipeline.config import GEMINI_API_BASE, GEMINI_FLASH
     try:
         prompt_text = (
-            f"You are a video search expert. Topic: '{query}'. Channel: {channel}.\n"
-            f"Generate {n} SHORT search queries (2-4 words) to find relevant b-roll footage.\n"
-            f"Think: synonyms, visual angles, related concepts, settings.\n"
+            f"You are a professional video stock researcher. Query: '{query}'. Channel Niche: {channel}.\n"
+            f"Generate {n} SHORT, CONCRETE stock footage search terms (2-4 words maximum).\n"
+            f"CRITICAL RULES:\n"
+            f"1. Use ONLY concrete physical objects, settings, or human actions (e.g. 'microscope lab scientist', 'blue ocean coral reef', 'engine piston moving').\n"
+            f"2. NEVER use abstract words like 'concept', 'breakthrough', 'discovery', 'mind-blowing', 'chemical' (alone), 'important'.\n"
+            f"3. Focus on real-world visual symbols, settings, or close-ups that represent '{query}'.\n"
             f"Return ONLY a JSON array of strings."
         )
         url = f"{GEMINI_API_BASE}/models/{GEMINI_FLASH}:generateContent?key={{key}}"
