@@ -1282,7 +1282,7 @@ def _score_candidate(item: dict, query: str, target_duration: float = 8.0) -> fl
         dur_score = max(0.0, 20.0 - 2.0 * diff)
         
     source_weights = {
-        "youtube": 25.0,
+        "youtube": 40.0,
         "nasa": 20.0,
         "dvids": 18.0,
         "wikimedia": 16.0,
@@ -1300,7 +1300,7 @@ def _score_candidate(item: dict, query: str, target_duration: float = 8.0) -> fl
 
 def fetch_broll(query: str, format_type: str, segment_index: int, duration: float = 6.0, narration: str = "", alt_queries: list[str] | None = None, used_urls: set[str] | None = None, channel: str = "general") -> str:
     """
-    Unified B-roll candidate ranking across multiple platforms (Coverr, Pexels, Pixabay, NASA, Wikimedia)
+    Unified B-roll candidate ranking across multiple platforms (YouTube CC prioritized, Coverr, Pexels, Pixabay, NASA, Wikimedia)
     using Gemini Vision matching and URL de-duplication.
     """
     orientation = "portrait" if format_type == "short" else "landscape"
@@ -1367,7 +1367,7 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
     def run_source_query(source: str, q: str) -> list[dict]:
         try:
             if source == "youtube":
-                return _youtube_candidates(q, n=3)
+                return _youtube_candidates(q, n=5)
             elif source == "nasa":
                 if not NASA_BROLL_ENABLED:
                     return []
@@ -1521,9 +1521,12 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
     # ── Fallback 1: Single Frame fallback search on other videos waterfall ─────────────────
     print(f"[B-roll] Segment {segment_index}: falling back to parallel waterfall search...")
     
-    # We prioritize archive databases (NASA, DVIDS, Wikimedia, Archive) at the top of the waterfall,
-    # and search with main, clean fallback, and general fallback queries.
-    other_videos = []
+    # We prioritize YouTube CC and archive databases at the top of the waterfall
+    other_videos = [
+        ("YouTube CC (main)", lambda: _youtube_candidates(query, n=1)[0]["video_url"] if _youtube_candidates(query, n=1) else None),
+        ("YouTube CC (fallback)", lambda: _youtube_candidates(clean_fallback, n=1)[0]["video_url"] if _youtube_candidates(clean_fallback, n=1) else None),
+        ("YouTube CC (general)", lambda: _youtube_candidates(general_fallback, n=1)[0]["video_url"] if _youtube_candidates(general_fallback, n=1) else None),
+    ]
     if NASA_BROLL_ENABLED:
         other_videos.extend([
             ("NASA video (main)", lambda: _nasa_video(query)),
