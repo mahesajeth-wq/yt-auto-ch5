@@ -749,15 +749,18 @@ def _parse_iso_duration(duration_str: str) -> float:
 
 def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
     """
-    Search YouTube for Creative Commons videos matching the query.
-    Uses YouTube's official Creative Commons filter (sp=EgQQASgB).
+    Search YouTube for matchable videos.
+    Tier 1: Creative Commons filter (sp=EgQQASgB).
+    Tier 2: General YouTube search fallback if Tier 1 returns < n.
     """
     import yt_dlp
     import urllib.parse
     import re
     
     candidates = []
+    seen_urls = set()
     try:
+        # Tier 1: Search Creative Commons
         print(f"[B-roll] Searching YouTube (Creative Commons) for: '{query}'...")
         encoded_query = urllib.parse.quote(query)
         search_url = f"https://www.youtube.com/results?search_query={encoded_query}&sp=EgQQASgB"
@@ -778,20 +781,17 @@ def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
                 url = entry.get('url', '')
                 duration = entry.get('duration')
                 
-                if not url:
+                if not url or url in seen_urls:
                     continue
                     
                 duration_secs = float(duration) if duration else 0.0
                 if duration_secs > 0.0 and duration_secs < 5.0:
                     continue
                 
-                # Get highest resolution thumbnail
+                seen_urls.add(url)
                 thumbnails = entry.get("thumbnails", [])
-                thumb_url = ""
-                if thumbnails:
-                    thumb_url = thumbnails[-1].get("url", "")
+                thumb_url = thumbnails[-1].get("url", "") if thumbnails else ""
                 
-                # Generate fallback thumbnail if not provided
                 video_id = None
                 m_id = re.search(r'(?:v=|\/)([^&\n?#]+)', url)
                 if m_id:
@@ -808,10 +808,49 @@ def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
                     "duration": duration_secs
                 })
                 
-        print(f"[B-roll] Found {len(candidates)} YouTube Creative Commons candidates.")
+        # Tier 2: General Search Fallback if < n
+        if len(candidates) < n:
+            needed = n - len(candidates)
+            print(f"[B-roll] Tier 1 returned {len(candidates)} CC items. Running Tier 2 General Search for {needed} more...")
+            gen_search = f"ytsearch{n*2}:{query}"
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                result = ydl.extract_info(gen_search, download=False)
+                entries = result.get('entries', []) if result else []
+                for entry in entries:
+                    if not entry:
+                        continue
+                    url = entry.get('url', '')
+                    if not url or url in seen_urls:
+                        continue
+                    duration_secs = float(entry.get('duration') or 0.0)
+                    if duration_secs > 0.0 and duration_secs < 5.0:
+                        continue
+                    
+                    seen_urls.add(url)
+                    thumbnails = entry.get("thumbnails", [])
+                    thumb_url = thumbnails[-1].get("url", "") if thumbnails else ""
+                    video_id = None
+                    m_id = re.search(r'(?:v=|\/)([^&\n?#]+)', url)
+                    if m_id:
+                        video_id = m_id.group(1)
+                    if video_id and not thumb_url:
+                        thumb_url = f"https://img.youtube.com/vi/{video_id}/0.jpg"
+                        
+                    candidates.append({
+                        "source": "YouTube",
+                        "video_url": url,
+                        "thumb_url": thumb_url,
+                        "title": entry.get('title', ''),
+                        "description": entry.get('description', '') or "",
+                        "duration": duration_secs
+                    })
+                    if len(candidates) >= n:
+                        break
+
+        print(f"[B-roll] Found {len(candidates)} YouTube candidates (Tier 1 CC + Tier 2 General).")
         return candidates
     except Exception as e:
-        print(f"[B-roll] YouTube CC search failed: {e}")
+        print(f"[B-roll] YouTube search failed: {e}")
         return []
 
 

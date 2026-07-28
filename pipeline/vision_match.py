@@ -54,14 +54,14 @@ def vision_rank_broll(
         f"   - A generic human doing an unrelated activity\n"
         f"   - Any scene that could belong to a completely different video topic\n"
         f"4. Pick the highest-scoring candidate even when imperfect, so the pipeline can use the best available asset from all providers.\n"
-        f"5. Set match_found=false only when the best candidate scores below 55.\n\n"
+        f"5. Set match_found=false only when the best candidate scores below 40.\n\n"
         f"Return ONLY valid JSON (no markdown):\n"
         f'{{"best_index": <int or null>, '
         f'"match_found": <bool>, '
         f'"confidence": <0-100 int>, '
         f'"candidate_scores": [<0-100 int for each candidate>], '
         f'"reject_reason": \"<why rejected, or empty string if accepted>\"}}\n\n'
-        f"Set match_found=true if confidence >= 55. Still explain weaknesses in reject_reason if confidence < 75."
+        f"Set match_found=true if confidence >= 40. Still explain weaknesses in reject_reason if confidence < 75."
     )
 
     parts = [{"text": prompt_text}]
@@ -101,8 +101,8 @@ def vision_rank_broll(
 
         if not (found and isinstance(idx, int) and 0 <= idx < len(thumbnails)):
             return None, False
-        if confidence < 55:
-            print(f"[VisionMatch] Very low confidence ({confidence}) — rejecting.")
+        if confidence < 40:
+            print(f"[VisionMatch] Low confidence ({confidence} < 40) — rejecting.")
             return None, False
 
         quality = "strong" if confidence >= 75 else "fallback"
