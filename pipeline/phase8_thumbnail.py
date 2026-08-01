@@ -2,6 +2,9 @@ import os
 import json
 import random
 import subprocess
+import requests
+import base64
+import urllib.parse
 from pipeline.config import THUMBNAIL_LAYOUTS
 
 _LAYOUT_STATE_FILE = "thumbnail_state.json"
@@ -23,9 +26,56 @@ def clean_thumbnail_text(text: str) -> str:
     cleaned = "".join(c for c in text if c.isalnum() or c in " -!?")
     return cleaned.replace("'", "'\\\\''")
 
+def _generate_gemini_bg_image(prompt: str) -> bytes | None:
+    """Attempt to generate background thumbnail using Gemini API Key (Nano Banana / Flash Image)."""
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return None
+        
+    models = ["gemini-2.5-flash-image", "gemini-3.1-flash-image", "gemini-3.1-flash-lite-image"]
+    for m in models:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={api_key}"
+        payload = {
+            "contents": [{
+                "parts": [{"text": f"Generate a high-resolution 16:9 cinematic YouTube thumbnail background image for: {prompt}. High contrast, 4k ultra detailed."}]
+            }],
+            "generationConfig": {
+                "responseModalities": ["IMAGE"]
+            }
+        }
+        try:
+            r = requests.post(url, json=payload, timeout=25)
+            if r.status_code == 200:
+                data = r.json()
+                candidates = data.get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    for p in parts:
+                        inline = p.get("inlineData") or p.get("inline_data")
+                        if inline and "data" in inline:
+                            print(f"[Thumbnail] Successfully generated AI background via Gemini model {m}!")
+                            return base64.b64decode(inline["data"])
+        except Exception as e:
+            print(f"[Thumbnail] Gemini model {m} call error: {e}")
+    return None
+
+def _generate_pollinations_bg_image(prompt: str) -> bytes | None:
+    """Fallback high-availability image generator via Pollinations AI (Flux/Imagen)."""
+    try:
+        clean_p = f"{prompt} cinematic 4k youtube thumbnail background high contrast"
+        encoded = urllib.parse.quote(clean_p)
+        seed = random.randint(1, 99999)
+        url = f"https://image.pollinations.ai/prompt/{encoded}?width=1280&height=720&model=flux&nologo=true&seed={seed}"
+        r = requests.get(url, timeout=25)
+        if r.status_code == 200 and len(r.content) > 10000:
+            print("[Thumbnail] Successfully generated AI background via Pollinations AI (Flux)!")
+            return r.content
+    except Exception as e:
+        print(f"[Thumbnail] Pollinations AI generator error: {e}")
+    return None
+
 def _build_filter(layout: str, cleaned_text: str) -> str:
     """Return an FFmpeg -vf filter string for the given layout."""
-    import random
     text_color = random.choice(["#FFDD00", "#FF2D55", "#00C7FC", "#FFFFFF", "#FF9500"])
     shadow = "shadowcolor=black@0.55:shadowx=6:shadowy=6"
     
@@ -58,21 +108,35 @@ def _build_filter(layout: str, cleaned_text: str) -> str:
             f"fontcolor='{text_color}':borderw=5:bordercolor=black:{shadow}:x=40:y=(h-text_h)/2"
         )
 
-def generate_thumbnail(final_video_path: str, thumbnail_text: str) -> str:
+def generate_thumbnail(final_video_path: str, thumbnail_text: str, topic_prompt: str = "") -> str:
     print(f"Generating thumbnail for '{thumbnail_text}'...")
     os.makedirs("output", exist_ok=True)
 
     hook_frame_path = "output/hook_frame.jpg"
     thumbnail_path  = "output/thumbnail.jpg"
 
-    # 1. Extract best frame
-    subprocess.run(
-        ["ffmpeg", "-y", "-i", final_video_path,
-         "-vf", "thumbnail=n=300", "-frames:v", "1", "-q:v", "2", hook_frame_path],
-        check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
-    )
+    # 1. Try Gemini API key first (Nano Banana / Flash Image)
+    prompt_query = topic_prompt or thumbnail_text
+    bg_bytes = _generate_gemini_bg_image(prompt_query)
+    
+    # 2. Fallback to Pollinations AI generator if Gemini rate-limited
+    if not bg_bytes:
+        bg_bytes = _generate_pollinations_bg_image(prompt_query)
+        
+    # 3. If AI image generation succeeded, save to hook_frame_path
+    if bg_bytes:
+        with open(hook_frame_path, "wb") as f:
+            f.write(bg_bytes)
+    else:
+        # 4. Fallback: Extract best frame from final video
+        print("[Thumbnail] Falling back to video frame extraction...")
+        subprocess.run(
+            ["ffmpeg", "-y", "-i", final_video_path,
+             "-vf", "thumbnail=n=300", "-frames:v", "1", "-q:v", "2", hook_frame_path],
+            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
 
-    # 2. Pick layout — avoid repeating last one
+    # 5. Pick layout — avoid repeating last one
     last = _load_last_layout()
     available = [l for l in THUMBNAIL_LAYOUTS if l != last]
     if not available:
@@ -83,16 +147,16 @@ def generate_thumbnail(final_video_path: str, thumbnail_text: str) -> str:
     cleaned = clean_thumbnail_text(thumbnail_text).upper()
     vf = _build_filter(layout, cleaned)
 
-    # 3. Try Bebas Neue, fallback to DejaVu Sans Bold
+    # 6. Burn high-impact typography
     cmd = ["ffmpeg", "-y", "-i", hook_frame_path, "-vf", vf, "-q:v", "2", thumbnail_path]
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError:
         print("Bebas Neue failed, retrying with DejaVu Sans Bold...")
-        vf_fallback = vf.replace("font='Bebas Neue':fontsize=110", "font='DejaVu Sans Bold':fontsize=90")
-        vf_fallback = vf_fallback.replace("font='Bebas Neue':fontsize=100", "font='DejaVu Sans Bold':fontsize=85")
-        vf_fallback = vf_fallback.replace("font='Bebas Neue':fontsize=95", "font='DejaVu Sans Bold':fontsize=80")
-        vf_fallback = vf_fallback.replace("font='Bebas Neue':fontsize=85", "font='DejaVu Sans Bold':fontsize=75")
+        vf_fallback = vf.replace("font='Bebas Neue':fontsize=105", "font='DejaVu Sans Bold':fontsize=85")
+        vf_fallback = vf_fallback.replace("font='Bebas Neue':fontsize=115", "font='DejaVu Sans Bold':fontsize=95")
+        vf_fallback = vf_fallback.replace("font='Bebas Neue':fontsize=100", "font='DejaVu Sans Bold':fontsize=80")
+        vf_fallback = vf_fallback.replace("font='Bebas Neue':fontsize=90", "font='DejaVu Sans Bold':fontsize=75")
         cmd_fb = ["ffmpeg", "-y", "-i", hook_frame_path, "-vf", vf_fallback, "-q:v", "2", thumbnail_path]
         subprocess.run(cmd_fb, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
