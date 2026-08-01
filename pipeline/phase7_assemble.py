@@ -33,6 +33,9 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
     
     w, h = (1080, 1920) if format_type == "short" else (1920, 1080)
     
+    footage_credits = []
+    seen_handles = set()
+
     for i, (broll_path, tts_path) in enumerate(zip(broll_files, tts_files)):
         duration = get_wav_duration(tts_path)
         durations.append(duration)
@@ -57,6 +60,32 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
             
         print(f"Normalizing segment {i} B-roll to duration {duration:.3f}s (offset: {ss_offset:.3f}s, total: {total_dur:.3f}s)...")
         
+        # Check if segment credit JSON exists for Fair Use on-screen attribution badge
+        credit_file = f"output/broll_{i}_credit.json"
+        drawtext_chain = ""
+        if os.path.exists(credit_file):
+            try:
+                with open(credit_file, "r") as cf:
+                    cdata = json.load(cf)
+                    handle = cdata.get("uploader_handle") or cdata.get("uploader_name")
+                    url = cdata.get("video_url")
+                    title = cdata.get("title")
+                    if handle:
+                        if handle not in seen_handles:
+                            seen_handles.add(handle)
+                            footage_credits.append({
+                                "uploader_handle": handle,
+                                "uploader_name": cdata.get("uploader_name", ""),
+                                "video_url": url,
+                                "title": title
+                            })
+                        clean_handle = re.sub(r"[^a-zA-Z0-9_@-]", "", str(handle))
+                        clean_txt = f"Footage\\: {clean_handle}"
+                        drawtext_chain = f",drawtext=text='{clean_txt}':x=40:y=80:fontsize=24:fontcolor=white:box=1:boxcolor=black@0.6:boxborderw=6:enable='between(t,0,3.5)'"
+                        print(f"[Assemble] Burning on-screen attribution badge for segment {i}: {handle}")
+            except Exception as cerr:
+                print(f"[Assemble] Warning: Could not parse credit file {credit_file}: {cerr}")
+
         # Select randomized cinematic camera motion (Ken Burns / Pan / Zoom)
         import random as _rnd
         motion_idx = _rnd.randint(0, 4)
@@ -67,7 +96,7 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
         
         if is_hyperframes:
             print(f"Bypassing scale/crop/pan for Hyperframes output: {broll_path}")
-            vf_chain = "setsar=1"
+            vf_chain = "setsar=1" + drawtext_chain
         else:
             # Base scale-crop to cover full bleed with unsharp masking for enhanced clarity
             if motion_idx == 0:
@@ -75,35 +104,35 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2 + (t-{duration}/2)*15':'(in_h-out_h)/2 + (t-{duration}/2)*15',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1"
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1" + drawtext_chain
                 )
             elif motion_idx == 1:
                 # 2. Slow Panning Upward
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2 + (t-{duration}/2)*22',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1"
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1" + drawtext_chain
                 )
             elif motion_idx == 2:
                 # 3. Slow Panning Downward
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2 - (t-{duration}/2)*22',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1"
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1" + drawtext_chain
                 )
             elif motion_idx == 3:
                 # 4. Slow Panning Right
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2 + (t-{duration}/2)*22':'(in_h-out_h)/2',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1"
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1" + drawtext_chain
                 )
             else:
                 # 5. Slow Panning Left
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2 - (t-{duration}/2)*22':'(in_h-out_h)/2',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1"
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1" + drawtext_chain
                 )
             
         cmd = [
@@ -113,6 +142,14 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
         ]
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         normalized_brolls.append(norm_path)
+
+    if footage_credits:
+        try:
+            with open("output/footage_credits.json", "w") as fcf:
+                json.dump(footage_credits, fcf, indent=2)
+            print(f"[Assemble] Saved {len(footage_credits)} footage credit entries to output/footage_credits.json.")
+        except Exception as fc_err:
+            print(f"[Assemble] Warning: Could not save footage_credits.json: {fc_err}")
 
     # Step 2: Concatenate B-roll (no audio)
     print("Step 2: Concatenating B-roll clips...")

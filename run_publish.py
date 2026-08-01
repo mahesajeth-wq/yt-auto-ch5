@@ -96,6 +96,23 @@ def main():
     print(f"Thumbnail: {thumbnail_path}")
     print(f"Title: {metadata.get('title')}")
     
+    # --- FOOTAGE CREDITS ATTRIBUTION APPEND ---
+    if os.path.exists("output/footage_credits.json"):
+        try:
+            with open("output/footage_credits.json", "r") as fc_file:
+                fc_data = json.load(fc_file)
+                if fc_data:
+                    credits_str = "\n\n--- FOOTAGE CREDITS (Educational Fair Use) ---\n"
+                    for fc_item in fc_data:
+                        handle = fc_item.get("uploader_handle") or fc_item.get("uploader_name") or "@YouTube"
+                        v_url = fc_item.get("video_url") or ""
+                        credits_str += f"Source: {handle} - {v_url}\n"
+                    curr_desc = metadata.get("description", "") or ""
+                    metadata["description"] = curr_desc + credits_str
+                    print(f"[Publish] Appended {len(fc_data)} footage credit entries to video description.")
+        except Exception as fc_err:
+            print(f"[Publish] Warning: Could not append footage credits: {fc_err}")
+
     # --- DECOUPLED PLATFORM UPLOADS ---
     print("\n🚀 Starting platform uploads...")
     

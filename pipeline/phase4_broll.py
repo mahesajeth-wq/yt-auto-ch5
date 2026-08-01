@@ -749,9 +749,8 @@ def _parse_iso_duration(duration_str: str) -> float:
 
 def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
     """
-    Search YouTube for matchable videos.
-    Tier 1: Creative Commons filter (sp=EgQQASgB).
-    Tier 2: General YouTube search fallback if Tier 1 returns < n.
+    Search YouTube for matchable B-roll clips using broad ytsearch query with negative keywords.
+    Captures uploader channel handle for on-screen Fair Use attribution.
     """
     import yt_dlp
     import urllib.parse
@@ -760,108 +759,85 @@ def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
     candidates = []
     seen_urls = set()
     try:
-        # Tier 1: Search Creative Commons
-        print(f"[B-roll] Searching YouTube (Creative Commons) for: '{query}'...")
-        encoded_query = urllib.parse.quote(query)
-        search_url = f"https://www.youtube.com/results?search_query={encoded_query}&sp=EgQQASgB"
+        clean_q = f"{query} b-roll 4k -vlog -talking -face -commentary -reaction -shorts"
+        print(f"[B-roll] Searching YouTube for: '{clean_q}'...")
         
         ydl_opts = {
             'quiet': True,
             'extract_flat': True,
             'force_generic_extractor': False,
         }
+        
+        search_target = f"ytsearch{n*3}:{clean_q}"
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            result = ydl.extract_info(search_url, download=False)
+            result = ydl.extract_info(search_target, download=False)
             entries = result.get('entries', []) if result else []
             
-            for entry in entries[:n]:
+            for entry in entries:
                 if not entry:
                     continue
                 title = entry.get('title', '')
                 url = entry.get('url', '')
                 duration = entry.get('duration')
                 
-                if not url or url in seen_urls:
-                    continue
-                    
+                # Filter out shorts (< 8s) or excessively long videos (> 20 min)
                 duration_secs = float(duration) if duration else 0.0
-                if duration_secs > 0.0 and duration_secs < 5.0:
+                if duration_secs > 0.0 and (duration_secs < 8.0 or duration_secs > 1200.0):
                     continue
                 
-                seen_urls.add(url)
-                thumbnails = entry.get("thumbnails", [])
-                thumb_url = thumbnails[-1].get("url", "") if thumbnails else ""
-                
-                video_id = None
-                m_id = re.search(r'(?:v=|\/)([^&\n?#]+)', url)
-                if m_id:
-                    video_id = m_id.group(1)
-                if video_id and not thumb_url:
-                    thumb_url = f"https://img.youtube.com/vi/{video_id}/0.jpg"
-                    
-                candidates.append({
-                    "source": "YouTube",
-                    "video_url": url,
-                    "thumb_url": thumb_url,
-                    "title": title,
-                    "description": entry.get('description', '') or "",
-                    "duration": duration_secs
-                })
-                
-        # Tier 2: General Search Fallback if < n
-        if len(candidates) < n:
-            needed = n - len(candidates)
-            print(f"[B-roll] Tier 1 returned {len(candidates)} CC items. Running Tier 2 General Search for {needed} more...")
-            gen_search = f"ytsearch{n*2}:{query}"
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                result = ydl.extract_info(gen_search, download=False)
-                entries = result.get('entries', []) if result else []
-                for entry in entries:
-                    if not entry:
-                        continue
-                    url = entry.get('url', '')
-                    if not url or url in seen_urls:
-                        continue
-                    duration_secs = float(entry.get('duration') or 0.0)
-                    if duration_secs > 0.0 and duration_secs < 5.0:
-                        continue
-                    
-                    seen_urls.add(url)
-                    thumbnails = entry.get("thumbnails", [])
-                    thumb_url = thumbnails[-1].get("url", "") if thumbnails else ""
-                    video_id = None
+                # Derive video_id and canonical URL
+                video_id = entry.get('id')
+                if not video_id and url:
                     m_id = re.search(r'(?:v=|\/)([^&\n?#]+)', url)
                     if m_id:
                         video_id = m_id.group(1)
-                    if video_id and not thumb_url:
-                        thumb_url = f"https://img.youtube.com/vi/{video_id}/0.jpg"
-                        
-                    candidates.append({
-                        "source": "YouTube",
-                        "video_url": url,
-                        "thumb_url": thumb_url,
-                        "title": entry.get('title', ''),
-                        "description": entry.get('description', '') or "",
-                        "duration": duration_secs
-                    })
-                    if len(candidates) >= n:
-                        break
+                
+                if not video_id:
+                    continue
+                    
+                full_url = f"https://www.youtube.com/watch?v={video_id}"
+                if full_url in seen_urls:
+                    continue
+                seen_urls.add(full_url)
+                
+                # Extract uploader channel handle
+                uploader = entry.get('uploader') or entry.get('channel') or entry.get('uploader_id') or "YouTube"
+                clean_uploader = re.sub(r'[^a-zA-Z0-9_-]', '', str(uploader))
+                handle = f"@{clean_uploader}" if clean_uploader else "@YouTube"
+                
+                # High-reliability thumbnail URL (hqdefault.jpg)
+                thumb_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+                
+                candidates.append({
+                    "source": "YouTube",
+                    "video_url": full_url,
+                    "thumb_url": thumb_url,
+                    "title": title,
+                    "description": entry.get('description', '') or "",
+                    "duration": duration_secs,
+                    "uploader_name": uploader,
+                    "uploader_handle": handle
+                })
+                
+                if len(candidates) >= n:
+                    break
 
-        print(f"[B-roll] Found {len(candidates)} YouTube candidates (Tier 1 CC + Tier 2 General).")
+        print(f"[B-roll] Found {len(candidates)} YouTube candidate clips.")
         return candidates
     except Exception as e:
         print(f"[B-roll] YouTube search failed: {e}")
         return []
 
 
-def _download_video_robust(url: str, out_path: str, segment_index: int) -> bool:
+def _download_video_robust(url: str, out_path: str, segment_index: int, candidate_info: dict | None = None) -> bool:
     try:
         # Check if downloading from YouTube
         if "youtube.com" in url or "youtu.be" in url:
             print(f"[B-roll] Downloading YouTube video slice using yt-dlp CLI: {url}...")
             
-            # 1. Fetch metadata json to read duration
+            # 1. Fetch metadata json to read duration and uploader details
             duration_secs = 0.0
+            info = {}
             try:
                 cmd_info = ["yt-dlp", "--dump-json", "--extract-flat", url]
                 res_info = subprocess.run(cmd_info, capture_output=True, text=True, check=True)
@@ -884,13 +860,37 @@ def _download_video_robust(url: str, out_path: str, segment_index: int) -> bool:
             cmd_dl = [
                 "yt-dlp",
                 "--download-sections", section_arg,
-                "--format", "bestvideo[height<=720][ext=mp4]/best",
+                "--format", "bestvideo[height<=1080][ext=mp4]/bestvideo[height<=720]+bestaudio/best",
                 "--output", out_path,
                 url
             ]
             print(f"[B-roll] Running yt-dlp section download: {' '.join(cmd_dl)}")
             subprocess.run(cmd_dl, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            return os.path.exists(out_path) and os.path.getsize(out_path) > 10_000
+            
+            success = os.path.exists(out_path) and os.path.getsize(out_path) > 10_000
+            if success:
+                # Save credit metadata for on-screen attribution in phase 7
+                uploader = info.get("uploader") or info.get("channel") or (candidate_info.get("uploader_name") if candidate_info else "YouTube")
+                handle = candidate_info.get("uploader_handle") if candidate_info else None
+                if not handle and uploader:
+                    clean_u = re.sub(r'[^a-zA-Z0-9_-]', '', str(uploader))
+                    handle = f"@{clean_u}"
+                
+                credit_data = {
+                    "source": "YouTube",
+                    "uploader_name": uploader,
+                    "uploader_handle": handle or "@YouTube",
+                    "video_url": url,
+                    "title": info.get("title") or (candidate_info.get("title") if candidate_info else "")
+                }
+                credit_file = f"output/broll_{segment_index}_credit.json"
+                try:
+                    with open(credit_file, "w") as cf:
+                        json.dump(credit_data, cf)
+                    print(f"[B-roll] Saved segment {segment_index} credit metadata: {handle}")
+                except Exception as cerr:
+                    print(f"[B-roll] Warning: Could not save credit file: {cerr}")
+            return success
 
         r = requests.get(url, stream=True, timeout=90, headers={"User-Agent": "yt-auto/1.0"})
         r.raise_for_status()
@@ -1321,7 +1321,7 @@ def _score_candidate(item: dict, query: str, target_duration: float = 8.0) -> fl
         dur_score = max(0.0, 20.0 - 2.0 * diff)
         
     source_weights = {
-        "youtube": 40.0,
+        "youtube": 60.0,
         "nasa": 20.0,
         "dvids": 18.0,
         "wikimedia": 16.0,
