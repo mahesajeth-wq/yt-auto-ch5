@@ -124,6 +124,8 @@ def main():
         tts_durations = [get_wav_duration(f) for f in audio_files] if audio_files else []
         used_urls = set()
         broll_files = []
+        channel_niche = topic.get("niche") or os.environ.get("CHANNEL_NICHE") or "general"
+        print(f"[Phase 4] Using channel niche priority: '{channel_niche}'")
         for i, seg in enumerate(script["segments"]):
             dur = tts_durations[i] if tts_durations else 6.0
             bpath = phase4.fetch_broll(
@@ -133,7 +135,8 @@ def main():
                 duration=dur,
                 narration=seg["narration"],
                 alt_queries=seg.get("broll_queries"),
-                used_urls=used_urls
+                used_urls=used_urls,
+                channel=channel_niche
             )
             broll_files.append(bpath)
             

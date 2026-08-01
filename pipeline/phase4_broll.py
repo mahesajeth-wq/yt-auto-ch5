@@ -1358,24 +1358,31 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
 
     os.makedirs("output", exist_ok=True)
 
-def _sanitize_broll_query(query: str) -> str:
+def sanitize_broll_query(query: str) -> str:
     """
     Sanitize B-roll query by removing abstract adjectives, verbs, and meta-descriptions
     that break YouTube and stock search API index matching.
     """
     if not query:
         return ""
+    q_clean = re.sub(r'\bcross[-_\s]+section\b', '', query, flags=re.IGNORECASE)
     noise_words = {
-        "animated", "animation", "defect", "dramatic", "unraveling", "stuck",
-        "cross", "section", "burst", "shattered", "betraying", "secret", "flaw",
-        "concept", "visualization", "illustration", "rendering", "cgi", "showing",
-        "display", "unearthing", "typing", "close", "up", "closeup"
+        "animated", "animation", "defect", "defective", "dramatic", "unraveling", "stuck",
+        "cross", "section", "burst", "shattered", "shatter", "betraying", "secret", "flaw",
+        "concept", "visualization", "illustration", "rendering", "cgi", "showing", "display",
+        "unearthing", "typing", "close", "up", "closeup", "jarring", "macro", "loop",
+        "pumping", "filtering", "survival", "municipal", "how", "why", "system", "process"
     }
-    words = re.findall(r'[a-zA-Z0-9]+', query.lower())
+    words = re.findall(r'[a-zA-Z0-9]+', q_clean.lower())
     clean_words = [w for w in words if w not in noise_words and len(w) > 2]
     if not clean_words:
-        return query
-    return " ".join(clean_words[:3])
+        fallback = [w for w in re.findall(r'[a-zA-Z0-9]+', query) if len(w) > 2]
+        return " ".join(fallback[:3]) if fallback else query
+    return " ".join(clean_words[:4])
+
+
+def _sanitize_broll_query(query: str) -> str:
+    return sanitize_broll_query(query)
 
     # Return cached clip if already valid
     if os.path.exists(out_path) and os.path.getsize(out_path) > 10_000:
@@ -1465,7 +1472,7 @@ def _sanitize_broll_query(query: str) -> str:
     sources = CHANNEL_SOURCE_PRIORITY.get(channel, CHANNEL_SOURCE_PRIORITY["general"])
     tasks = []
     for source in sources:
-        for q in queries_to_try[:3]:
+        for q in queries_to_try[:6]:
             tasks.append((source, q))
 
     seen_gathering = set()
