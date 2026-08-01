@@ -1358,19 +1358,42 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
 
     os.makedirs("output", exist_ok=True)
 
+def _sanitize_broll_query(query: str) -> str:
+    """
+    Sanitize B-roll query by removing abstract adjectives, verbs, and meta-descriptions
+    that break YouTube and stock search API index matching.
+    """
+    if not query:
+        return ""
+    noise_words = {
+        "animated", "animation", "defect", "dramatic", "unraveling", "stuck",
+        "cross", "section", "burst", "shattered", "betraying", "secret", "flaw",
+        "concept", "visualization", "illustration", "rendering", "cgi", "showing",
+        "display", "unearthing", "typing", "close", "up", "closeup"
+    }
+    words = re.findall(r'[a-zA-Z0-9]+', query.lower())
+    clean_words = [w for w in words if w not in noise_words and len(w) > 2]
+    if not clean_words:
+        return query
+    return " ".join(clean_words[:3])
+
     # Return cached clip if already valid
     if os.path.exists(out_path) and os.path.getsize(out_path) > 10_000:
         print(f"[B-roll] Segment {segment_index}: using cached clip.")
         return out_path
 
-    # Build fallback queries
-    queries_to_try = [query]
-    if alt_queries:
-        queries_to_try.extend([q for q in alt_queries if q != query])
-    
+    # Build fallback queries with sanitization
+    sanitized_q = _sanitize_broll_query(query)
     clean_fallback = _make_clean_fallback(query)
-    if clean_fallback not in queries_to_try:
-        queries_to_try.append(clean_fallback)
+    
+    queries_to_try = [sanitized_q, query, clean_fallback]
+    if alt_queries:
+        for q in alt_queries:
+            sq = _sanitize_broll_query(q)
+            if sq not in queries_to_try:
+                queries_to_try.append(sq)
+            if q not in queries_to_try:
+                queries_to_try.append(q)
         
     clean_words = clean_fallback.split()
     if len(clean_words) > 2:

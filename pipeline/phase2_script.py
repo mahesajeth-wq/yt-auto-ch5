@@ -42,13 +42,13 @@ def generate_script(topic: dict, format_type: str) -> dict:
         prompt = f"""Generate an extremely viral, high-retention 25-35 second YouTube Short educational script on the topic: "{topic['topic']}".
 Use the following hook concept as your core theme: "{hook_formatted}" (short hook: "{topic.get('short_hook', '')}").
 
-Narration Style Requirements (with CH5 Mind Here Business Niche Quality Signals):
+Narration Style Requirements (with CH1 EduFun Niche Quality Signals):
 1. Pacing & Punchiness: 5 to 15 words per segment's narration. CRITICAL: NEVER split a single sentence across multiple segments! Each segment MUST contain 1 or 2 complete, self-contained sentences. If you split a sentence, the voiceover will pause awkwardly mid-sentence.
 2. Conversational & Extreme Simplicity: Use ONLY 5th-grade vocabulary. Extremely simple words, no complex grammar, no SAT words. Must be so simple a 10-year-old understands instantly.
 3. Engaging Tone: The voiceover narration must be conversational, highly engaging, and relatable—like a friend telling an exciting story. Write the voiceover to be energetic, warm, and inviting.
 3. Hook/Pattern Interrupt: Segment 1 must immediately shatter attention. Start with a shocking visual or conceptual paradox in under 12 words.
-4. Emotional/Sensory Triggers: Use strong, dramatic verbs and adjectives (e.g., "panicking", "shatters", "banned", "impossible", "bankrupt", "secret", "trapped").
-5. No Fluff: Get straight to the mind-blowing business fact or historical event. Every word must justify its existence.
+4. Emotional/Sensory Triggers: Use strong, dramatic verbs and adjectives (e.g., "panicking", "shatters", "banned", "impossible", "melts", "secret", "trapped").
+5. No Fluff: Get straight to the mind-blowing science. Every word must justify its existence.
 
 COMPANION LAYER - NICHE & FORMAT UPGRADE (SHORT):
 - FORMAT RULE (20-30s Shorts): The entire video IS the hook. Hook, content, and payoff happen simultaneously.
@@ -56,30 +56,34 @@ COMPANION LAYER - NICHE & FORMAT UPGRADE (SHORT):
   * Deliver (3-20s): The actual value/story/reveal. Fast. Dense. No filler.
   * Payoff + CTA (20-30s): The punchline, answer, result, or twist (one line only), then end.
   * Avoid: Words that do not carry weight, silence over 1s, padding, slow pacing.
-- NICHE QUALITY SIGNALS (Business):
-  * REAL NUMBERS, NOT VAGUE CLAIMS: Skeptical audience. Use real specific numbers, named decisions, and consequences. Avoid round numbers (e.g., say "$940 million" instead of "$1 billion").
-  * WHY OVER WHAT: Explain the cause and what it reveals about how business works, not just what happened. Arrive at a "why" before the video ends.
-  * EVERY STAT AS AN ON-SCREEN CARD: Any number spoken must simultaneously be designed to appear as a styled data card on screen.
-  * ONE LESSON. NOT FIVE: Deliver one clear, well-argued lesson per video.
-  * CONTRAST STRUCTURE: Compare two things (Company A vs B, Decision X vs Y, what they did vs what they should have done) to create tension.
+- NICHE QUALITY SIGNALS (Education):
+  * SHOW THE RESULT FIRST: State or show the answer/outcome before explaining how you get there. Viewers stay to understand something they just saw — not to wait.
+  * B-ROLL THAT PROVES THE POINT: Every concept explained verbally must have a visual that demonstrates it, not just decorates it.
+  * ONE CLEAR GAIN PER VIDEO: Teach exactly one thing. Script must answer: "What is the single thing this viewer will walk away with?"
+  * TEXT OVERLAYS THAT REINFORCE, NOT REPEAT: Use text for key terms, surprising numbers, simple diagrams, or summary sentences. Do not transcribe verbatim.
+  * CONTINUOUS CURIOSITY LOOP: Every 2-3 segments, give a new reason to stay with a new question (e.g., "But here's where it gets interesting...").
 
 For every `broll_query` field, write a SHORT, SPECIFIC, STOCK-FOOTAGE-FRIENDLY
-search term of 3-6 words MAXIMUM. Write exactly what a human would type into
-a stock video search bar (Pexels, Pixabay, etc). Use concrete nouns and visual
-objects — NOT instructions or descriptions of what you want.
+search term of 1-3 CONCRETE PHYSICAL NOUNS MAXIMUM (e.g., "water pipes", "ancient scroll", "mummy coffin", "sea sponges", "gold jewelry").
+Write exactly what a human would type into a stock video search bar. Use concrete nouns and visual objects — NOT instructions, verbs, or descriptions of what you want.
 
-CORRECT examples: "Steve Jobs presenting iphone", "Wall street stock market ticker",
-"abandoned factory ruins", "corporate skyscraper boardroom", "vintage 1950s television",
-"money printing machine", "retail store empty shelves", "business handshake contract"
+CRITICAL BROLL QUERY RULES:
+- MUST be 1-3 simple, concrete physical nouns (e.g. "water pipes", "ancient scroll", "mummy coffin", "sea sponges", "gold jewelry", "smartphone").
+- NEVER include abstract adjectives, verbs, or meta-words like "animated", "defect", "dramatic", "unraveling", "stuck", "shattered", "cross section", "concept", "visualization", "illustration".
+- Write queries that represent real physical footage found in stock video libraries or YouTube documentaries.
 
-WRONG examples: "visually jarring close-up of the topic", "macro b-roll of historical
-event", "closing beautiful shot returning to start", "diagram concept visualization",
-"complex financial derivative graph" (too specific for stock footage), "product" (too ambiguous, returns generic boxes)
+CORRECT examples: "Stephen Hawking wheelchair", "DNA double helix",
+"quantum computer chip", "black hole space", "astronaut spacewalk",
+"brain neurons firing", "atom particle collider", "coral reef fish"
+
+WRONG examples: "visually jarring close-up of the topic", "macro b-roll of scientific
+element", "closing beautiful shot returning to start", "diagram concept visualization",
+"animated gate valve defect", "ancient scroll unraveling dramatic", "cross section stuck"
 
 IMPORTANT B-ROLL RULES:
-- Stock video sites DO NOT HAVE highly specific obscure startup founders or old unknown brands by name.
-- For abstract business concepts, use terms like "stock market trading screen", "business meeting argument", "vintage newspaper headline", or "empty office building".
-- NEVER use the word "product" alone, as stock sites return generic blank boxes. Use "shopping mall busy" or "vintage advertisement poster".
+- Stock video sites DO NOT HAVE specific molecules or rare deep-sea fish by name.
+- For chemicals or proteins, use terms like "abstract science background", "microscope biology animation", "glowing particles", or "fluid dynamics".
+- NEVER use the word "chemical" alone, as stock sites return industrial factories and smokestacks instead of biology. Use "chemistry laboratory" or "liquid mixture".
 
 For each segment, also provide a `broll_queries` array with 3-5 ALTERNATIVE search terms for the same visual concept. These should be synonyms, related concepts, or different angles on the same subject. The first entry should match `broll_query`.
 
@@ -91,7 +95,7 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
   "title": "A catchy title under 40 chars, starting with a hook word/number and containing one emoji",
   "voiceover_plan": "A 2-3 sentence internal plan detailing the emotional arc of the voiceover. How should the narrator sound? Think step-by-step to plan the performance before writing.",
   "vocal_tone": "Select the single best vocal delivery style for this topic. Choose EXACTLY ONE from this list: 'dramatic_whisper' (best for secrets, hidden info, suppressed history), 'suspenseful_mystery' (best for crimes, conspiracies, unsolved puzzles), 'energetic_storytelling' (best for science breakthroughs, viral tech, amazing facts), 'deep_curiosity' (best for space, nature, philosophy, the unknown), 'bold_authority' (best for business, finance, economics, power dynamics), 'warm_storyteller' (best for human interest, culture, social stories), 'dark_revelation' (best for scandals, cover-ups, disturbing truths), 'playful_wit' (best for funny/ironic history, absurd facts, counter-intuitive discoveries). Match the tone to the emotional core of the topic.",
-  "description": "Line1: restate the hook\nLine2: Fast. Accurate. Mind-blowing.\nLine3: 📲 Follow our socials & links -> {BEACONS_LINK}\n\n#business #history #entrepreneur #facts",
+  "description": "Line1: restate the hook\nLine2: Fast. Accurate. Mind-blowing.\nLine3: 📲 Follow our socials & links -> {BEACONS_LINK}\n\n#science #didyouknow #facts",
   "tags": ["8 to 12 relevant tags under 500 characters total"],
   "category_id": "27",
   "segments": [
@@ -99,14 +103,14 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
     {{
       "id": 1,
       "narration": "opening shocking hook complete sentence - 12 words or less, massive information gap",
-      "broll_query": "{topic['topic']} vintage newspaper headline",
-      "broll_queries": ["{topic['topic']} vintage newspaper headline", "wall street traders panicking", "corporate skyscraper exterior", "1950s television commercial"],
+      "broll_query": "{topic['topic']} black hole accretion disk space",
+      "broll_queries": ["{topic['topic']} black hole accretion disk space", "event horizon visualization", "gravitational lensing effect", "supermassive black hole animation"],
       "duration_target": 6
     }},
     {{
       "id": 2,
-      "narration": "Mind-bending fact that expands on the hook as a COMPLETE sentence",
-      "broll_query": "money printing machine close up",
+      "narration": "Mind-bending scientific fact that expands on the hook - 8 words or less",
+      "broll_query": "Albert Einstein chalkboard equations",
       "duration_target": 6
     }},
     {{
@@ -125,8 +129,8 @@ For Segment 1 specifically:
 - `broll_query` MUST describe a high-motion, high-contrast, visually arresting shot (fast motion, bright colors, dramatic close-up) — this is the opening pattern-interrupt that determines whether viewers keep watching.
 
 For Segments 2 to (n-1):
-- Frame facts with visual or historical paradoxes (e.g., 'A company worth billions that didn't sell a single product' or 'The worst ad in history that made them millionaires').
-- Deliver the single most mind-bending historical fact in Segment 2.
+- Frame facts with visual or scientific paradoxes (e.g., 'Something the size of a city that weighs more than the sun' or 'The man who failed entrance exams rewrote the universe').
+- Deliver the single most mind-bending scientific fact in Segment 2.
 - Introduce an open loop (a second mystery or surprise fact) in Segment 3 that builds tension towards the loop twist.
 
 For the final segment (Segment {segment_count}) specifically:
@@ -142,7 +146,7 @@ For the final segment (Segment {segment_count}) specifically:
         prompt = f"""Generate a comprehensive 7-10 minute YouTube educational script on the topic: "{topic['topic']}".
 The script must have 15 to 18 segments, each targeting 25-35 seconds of narration.
 
-Narration Style Requirements (with CH5 Mind Here Business Niche Quality Signals):
+Narration Style Requirements (with CH1 EduFun Niche Quality Signals):
 1. Conversational & Simple Language: Use very simple, easy-to-understand, and highly relatable words that anyone can easily follow. Avoid obscure, complex, or overly difficult English vocabulary. Keep the narration friendly, extremely engaging, and relatable—like a friend explaining an amazing topic.
 2. Engaging Tone: The voiceover narration must be conversational, highly engaging, and relatable—like a friend telling an exciting story. Write the voiceover to be energetic, warm, and inviting.
 Structure the narrative into:
@@ -161,49 +165,49 @@ COMPANION LAYER - NICHE & FORMAT UPGRADE (LONG):
   * Payoff + CTA (5:00-5:30, segments 17-18): Wrap core idea. One line CTA. End clean.
 - PATTERN INTERRUPT: Include exactly 2-3 pattern interrupts total (visual shift, tonal change, new angle) around 1:30, 3:00, and 4:30.
 - Avoid: intro/context >45s, padding middle, saving best point for end, or >3 main points.
-- NICHE QUALITY SIGNALS (Business):
-  * REAL NUMBERS, NOT VAGUE CLAIMS: Skeptical audience. Use real specific numbers, named decisions, and consequences. Avoid round numbers (e.g., say "$940 million" instead of "$1 billion").
-  * WHY OVER WHAT: Explain the cause and what it reveals about how business works, not just what happened. Arrive at a "why" before the video ends.
-  * EVERY STAT AS AN ON-SCREEN CARD: Any number spoken must simultaneously be designed to appear as a styled data card on screen.
-  * ONE LESSON. NOT FIVE: Deliver one clear, well-argued lesson per video.
-  * CONTRAST STRUCTURE: Compare two things (Company A vs B, Decision X vs Y, what they did vs what they should have done) to create tension.
+- NICHE QUALITY SIGNALS (Education):
+  * SHOW THE RESULT FIRST: State or show the answer/outcome before explaining how you get there. Viewers stay to understand something they just saw — not to wait.
+  * B-ROLL THAT PROVES THE POINT: Every concept explained verbally must have a visual that demonstrates it, not just decorates it.
+  * ONE CLEAR GAIN PER VIDEO: Teach exactly one thing. Script must answer: "What is the single thing this viewer will walk away with?"
+  * TEXT OVERLAYS THAT REINFORCE, NOT REPEAT: Use text for key terms, surprising numbers, simple diagrams, or summary sentences. Do not transcribe verbatim.
+  * CONTINUOUS CURIOSITY LOOP: Every 60-90 seconds, give a new reason to stay with a new question (e.g., "But here's where it gets interesting...").
 
 For every `broll_query` field, write a SHORT, SPECIFIC, STOCK-FOOTAGE-FRIENDLY
 search term of 3-6 words MAXIMUM. Write exactly what a human would type into
 a stock video search bar (Pexels, Pixabay, etc). Use concrete nouns and visual
 objects — NOT instructions or descriptions of what you want.
 
-CORRECT examples: "Steve Jobs presenting iphone", "Wall street stock market ticker",
-"abandoned factory ruins", "corporate skyscraper boardroom", "vintage 1950s television",
-"money printing machine", "retail store empty shelves", "business handshake contract"
+CORRECT examples: "Stephen Hawking wheelchair smiling", "DNA double helix blue",
+"quantum computer chip closeup", "black hole space vortex", "astronaut spacewalk ISS",
+"brain neurons firing", "atom particle collider", "coral reef fish colorful"
 
-WRONG examples: "visually jarring close-up of the topic", "macro b-roll of historical
-event", "closing beautiful shot returning to start", "diagram concept visualization",
-"complex financial derivative graph" (too specific for stock footage), "product" (too ambiguous, returns generic boxes)
+WRONG examples: "visually jarring close-up of the topic", "macro b-roll of scientific
+element", "closing beautiful shot returning to start", "diagram concept visualization",
+"TMAO molecular structure" (too specific for stock footage), "chemical" (too ambiguous, returns factories)
 
 IMPORTANT B-ROLL RULES:
-- Stock video sites DO NOT HAVE highly specific obscure startup founders or old unknown brands by name.
-- For abstract business concepts, use terms like "stock market trading screen", "business meeting argument", "vintage newspaper headline", or "empty office building".
-- NEVER use the word "product" alone, as stock sites return generic blank boxes. Use "shopping mall busy" or "vintage advertisement poster".
+- Stock video sites DO NOT HAVE specific molecules or rare deep-sea fish by name.
+- For chemicals or proteins, use terms like "abstract science background", "microscope biology animation", "glowing particles", or "fluid dynamics".
+- NEVER use the word "chemical" alone, as stock sites return industrial factories and smokestacks instead of biology. Use "chemistry laboratory" or "liquid mixture".
 
 For each segment, also provide a `broll_queries` array with 3-5 ALTERNATIVE search terms for the same visual concept. These should be synonyms, related concepts, or different angles on the same subject. The first entry should match `broll_query`.
 
-For any named person (CEO, historical figure): ALWAYS include their name in the query.
-For abstract business concepts: use the most recognizable visual symbol.
+For any named person (scientist, historical figure): ALWAYS include their name in the query.
+For abstract science concepts: use the most recognizable visual symbol.
 
 You MUST return your response ONLY as a raw JSON object with no markdown syntax. The JSON structure MUST be exactly like this:
 {{
   "title": "Engaging educational title for a long video, under 70 characters",
   "voiceover_plan": "A 2-3 sentence internal plan detailing the emotional arc of the voiceover. How should the narrator sound? Think step-by-step to plan the performance before writing.",
-  "description": "A detailed, engaging description explaining what the video covers, including timestamps and educational value.\\n\\n#business #history #entrepreneur #education",
+  "description": "A detailed, engaging description explaining what the video covers, including timestamps and educational value.\\n\\n#science #education #technology",
   "tags": ["15 to 20 relevant tags"],
   "category_id": "27",
   "segments": [
     {{
       "id": 1,
       "narration": "Opening narration hook...",
-      "broll_query": "{topic['topic']} vintage newspaper headline",
-      "broll_queries": ["{topic['topic']} vintage newspaper headline", "wall street traders panicking", "corporate skyscraper exterior", "1950s television commercial"],
+      "broll_query": "{topic['topic']} space stars universe",
+      "broll_queries": ["{topic['topic']} space stars universe", "galaxy nebula deep space", "cosmos starfield timelapse", "astronomical observatory night sky"],
       "duration_target": 30
     }}
     // ... total 15-18 segments

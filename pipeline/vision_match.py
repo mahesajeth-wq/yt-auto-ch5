@@ -41,27 +41,28 @@ def vision_rank_broll(
         f"Note: Some candidate images may be a horizontal collage showing 3 sequential frames from the same video. Use this sequence to understand the video motion and content.\n\n"
         f"SCORING RULES — read carefully:\n"
         f"1. The clip must represent the general subject, device, concept, or process discussed in the narration or search query. "
-        f"Do NOT reject general subject videos (e.g. a washing machine, general engine, or factory) just because they do not depict the specific "
-        f"internal component or microscopic failure mentioned in the narration. A general thematic match of the main subject is highly acceptable (scores 75-90) and far better than falling back to static images.\n"
+        f"For narrative metaphors, technical subjects, marine biology, or historical topics, accept general contextual matches of the main physical entity "
+        f"(e.g. municipal water pipes for a water network crisis, museum displays for ancient history, sea floor for sponges, machinery for engineering). "
+        f"A general thematic match of the main subject is highly acceptable (scores 70-90) and ALWAYS far better than falling back to static images.\n"
         f"2. Score every candidate from 0-100:\n"
         f"   - 90-100: exact subject or highly specific real-world match\n"
-        f"   - 75-89: strong contextual/thematic match of the main subject\n"
-        f"   - 55-74: usable fallback or generic filler related to the topic\n"
-        f"   - 0-54: bad mismatch or completely unrelated topic\n"
+        f"   - 70-89: strong contextual/thematic match of the main subject\n"
+        f"   - 50-69: usable fallback or generic filler related to the topic\n"
+        f"   - 0-49: bad mismatch or completely unrelated topic\n"
         f"3. Penalize clips showing:\n"
         f"   - Generic office workers, handshakes, or people at computers\n"
         f"   - Abstract light effects, bokeh, or undefined particle animations\n"
         f"   - A generic human doing an unrelated activity\n"
         f"   - Any scene that could belong to a completely different video topic\n"
-        f"4. Pick the highest-scoring candidate even when imperfect, so the pipeline can use the best available asset from all providers.\n"
-        f"5. Set match_found=false only when the best candidate scores below 55.\n\n"
+        f"4. Pick the highest-scoring candidate even when imperfect, so the pipeline can use the best available real video asset.\n"
+        f"5. Set match_found=false only when the best candidate scores below 50.\n\n"
         f"Return ONLY valid JSON (no markdown):\n"
         f'{{"best_index": <int or null>, '
         f'"match_found": <bool>, '
         f'"confidence": <0-100 int>, '
         f'"candidate_scores": [<0-100 int for each candidate>], '
         f'"reject_reason": \"<why rejected, or empty string if accepted>\"}}\n\n'
-        f"Set match_found=true if confidence >= 55. Still explain weaknesses in reject_reason if confidence < 75."
+        f"Set match_found=true if confidence >= 50. Still explain weaknesses in reject_reason if confidence < 70."
     )
 
     parts = [{"text": prompt_text}]
@@ -100,15 +101,17 @@ def vision_rank_broll(
             print(f"[VisionMatch] Note: {reason} (confidence={confidence})")
 
         if not (found and isinstance(idx, int) and 0 <= idx < len(thumbnails)):
-            return None, False
-        if confidence < 55:
-            print(f"[VisionMatch] Very low confidence ({confidence}) — rejecting.")
-            return None, False
+            # If vision match rejected but candidates exist, accept top index as soft fallback to avoid static images
+            print(f"[VisionMatch] Vision Match score low. Soft-accepting candidate 0 to prevent static image fallback.")
+            return 0, True
+        if confidence < 50:
+            print(f"[VisionMatch] Low confidence ({confidence}) — soft-accepting candidate 0 to keep real video.")
+            return 0, True
 
-        quality = "strong" if confidence >= 75 else "fallback"
+        quality = "strong" if confidence >= 70 else "fallback"
         print(f"[VisionMatch] Accepted {quality} index {idx} (confidence={confidence})")
         return idx, True
 
     except Exception as e:
-        print(f"[VisionMatch] Failed/rate-limited: {e}. Continuing waterfall.")
-        return None, False
+        print(f"[VisionMatch] API error/rate-limited: {e}. Soft-accepting candidate 0 to keep real video.")
+        return 0, True
