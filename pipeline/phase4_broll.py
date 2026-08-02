@@ -860,13 +860,32 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
             cmd_dl = [
                 "yt-dlp",
                 "--download-sections", section_arg,
-                "--format", "bestvideo[height<=1080][ext=mp4]/bestvideo[height<=720]+bestaudio/best",
+                "--format", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
+                "--merge-output-format", "mp4",
+                "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "--no-check-certificates",
                 "--output", out_path,
                 url
             ]
             print(f"[B-roll] Running yt-dlp section download: {' '.join(cmd_dl)}")
             subprocess.run(cmd_dl, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             
+            # Check if downloaded directly or saved with alternate container extension
+            success = os.path.exists(out_path) and os.path.getsize(out_path) > 10_000
+            if not success:
+                for alt_ext in [".mp4", ".webm", ".mkv"]:
+                    candidate_file = out_path + alt_ext
+                    if os.path.exists(candidate_file) and os.path.getsize(candidate_file) > 10_000:
+                        print(f"[B-roll] Converting/renaming container {candidate_file} -> {out_path}...")
+                        cmd_conv = [
+                            "ffmpeg", "-y", "-i", candidate_file,
+                            "-c:v", "libx264", "-preset", "fast", "-crf", "20",
+                            "-pix_fmt", "yuv420p", "-an", out_path
+                        ]
+                        subprocess.run(cmd_conv, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                        if os.path.exists(candidate_file):
+                            os.remove(candidate_file)
+                        break
             success = os.path.exists(out_path) and os.path.getsize(out_path) > 10_000
             if success:
                 # Save credit metadata for on-screen attribution in phase 7
