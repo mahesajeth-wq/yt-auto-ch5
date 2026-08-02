@@ -108,18 +108,30 @@ def vision_rank_broll(
         if reason:
             print(f"[VisionMatch] Note: {reason} (confidence={confidence})")
 
-        if not (found and isinstance(idx, int) and 0 <= idx < len(thumbnails)):
-            # If vision match rejected but candidates exist, accept top index as soft fallback to avoid static images
-            print(f"[VisionMatch] Vision Match score low. Soft-accepting candidate 0 to prevent static image fallback.")
-            return 0, True
-        if confidence < 50:
-            print(f"[VisionMatch] Low confidence ({confidence}) — soft-accepting candidate 0 to keep real video.")
-            return 0, True
+        # Find highest scoring candidate with score >= 50 from candidate_scores list
+        best_candidate_idx = None
+        highest_score = 0
+        if isinstance(scores, list) and len(scores) == len(thumbnails):
+            for s_idx, score in enumerate(scores):
+                if isinstance(score, (int, float)) and score >= 50 and score > highest_score:
+                    highest_score = score
+                    best_candidate_idx = s_idx
 
-        quality = "strong" if confidence >= 70 else "fallback"
-        print(f"[VisionMatch] Accepted {quality} index {idx} (confidence={confidence})")
-        return idx, True
+        if best_candidate_idx is not None:
+            quality = "strong" if highest_score >= 70 else "usable"
+            print(f"[VisionMatch] Accepted {quality} index {best_candidate_idx} (score={highest_score})")
+            return best_candidate_idx, True
+
+        # Check model's best_index if confidence is valid
+        if found and isinstance(idx, int) and 0 <= idx < len(thumbnails) and confidence >= 50:
+            quality = "strong" if confidence >= 70 else "usable"
+            print(f"[VisionMatch] Accepted {quality} index {idx} (confidence={confidence})")
+            return idx, True
+
+        # ABSOLUTE REJECTION: Do NOT force Candidate 0 if all candidates score < 50
+        print(f"[VisionMatch] All candidate scores below 50 (scores={scores}). Strictly rejecting batch.")
+        return None, False
 
     except Exception as e:
-        print(f"[VisionMatch] API error/rate-limited: {e}. Soft-accepting candidate 0 to keep real video.")
-        return 0, True
+        print(f"[VisionMatch] API error/rate-limited: {e}. Rejecting batch to allow fallback query.")
+        return None, False

@@ -130,9 +130,23 @@ class _KeyPool:
         now = time.time()
         for i in range(len(self._keys)):
             candidate_idx = (self._idx + i) % len(self._keys)
-            if now >= self._cooldowns[candidate_idx]:
+            if self._statuses[candidate_idx] != "disabled" and now >= self._cooldowns[candidate_idx]:
                 self._idx = candidate_idx
                 return self._keys[candidate_idx]
+        
+        # Fallback: if all non-disabled keys are on cooldown, reset non-disabled keys and retry
+        print("[KeyPool] All non-disabled keys on cooldown. Auto-resetting key pool to keep pipeline running...")
+        for i in range(len(self._keys)):
+            if self._statuses[i] != "disabled":
+                self._cooldowns[i] = 0.0
+                self._statuses[i] = "active"
+                self._failures[i] = 0
+        self._save_state()
+
+        for i in range(len(self._keys)):
+            if self._statuses[i] != "disabled":
+                self._idx = i
+                return self._keys[i]
         return None
 
     def mark_failed(self, key: str, status_code: int = 429, transient: bool = True):

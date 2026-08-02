@@ -788,10 +788,16 @@ def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
                     if duration_secs > 0.0 and (duration_secs < 12.0 or duration_secs > 1800.0):
                         continue
                     
-                    # Filter out lecture/classroom/blackboard titles unless explicitly requested
+                    # Filter out lecture/classroom/blackboard/explainer/text-heavy titles unless explicitly requested
                     title_lower = title.lower()
-                    if any(bad in title_lower for bad in ["lecture", "classroom", "blackboard", "chalkboard", "whiteboard", "tutorial", "course", "teacher", "presentation", "lesson"]):
-                        print(f"[B-roll] Skipping lecture/classroom candidate: '{title}'")
+                    bad_title_keywords = [
+                        "lecture", "classroom", "blackboard", "chalkboard", "whiteboard", "tutorial", "course",
+                        "teacher", "presentation", "lesson", "explained", "visually", "visualized", "breakdown",
+                        "guide", "how to", "free stock", "stock footage", "watermark", "videohive", "shutterstock",
+                        "istock", "download", "text", "subtitles", "slides", "powerpoint", "explainer", "overview"
+                    ]
+                    if any(bad in title_lower for bad in bad_title_keywords):
+                        print(f"[B-roll] Skipping text/explainer/classroom candidate: '{title}'")
                         continue
                     
                     video_id = entry.get('id')
