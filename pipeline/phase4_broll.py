@@ -969,8 +969,6 @@ def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, dura
     try:
         if os.environ.get("DISABLE_HYPERFRAMES", "0") == "1":
             raise RuntimeError("Hyperframes disabled via DISABLE_HYPERFRAMES")
-        import json
-        import subprocess
         import uuid
         import shutil
         
