@@ -30,6 +30,7 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
     print("Step 1: Normalizing B-roll clips...")
     normalized_brolls = []
     durations = []
+    ss_offsets = []
     
     w, h = (1080, 1920) if format_type == "short" else (1920, 1080)
     
