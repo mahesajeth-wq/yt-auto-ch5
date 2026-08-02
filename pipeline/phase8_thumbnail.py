@@ -108,6 +108,33 @@ def _build_filter(layout: str, cleaned_text: str) -> str:
             f"fontcolor='{text_color}':borderw=5:bordercolor=black:{shadow}:x=40:y=(h-text_h)/2"
         )
 
+def _generate_vivid_thumbnail_prompt(topic: str, thumbnail_text: str) -> str:
+    """Uses Gemini to transform abstract topics into concrete, high-impact 16:9 visual prompts."""
+    try:
+        from pipeline.gemini import GeminiClient
+        client = GeminiClient()
+        prompt = (
+            f"Topic: '{topic}'\n"
+            f"Thumbnail Text: '{thumbnail_text}'\n\n"
+            f"You are a top YouTube thumbnail designer. Write a 1-sentence, highly descriptive visual image prompt for an AI image generator (Flux/Midjourney).\n"
+            f"CRITICAL RULES:\n"
+            f"1. Describe a CONCRETE 3D visual scene or subject (e.g. 'A glowing blue quantum computer core radiating energy bolts inside a dark futuristic laboratory').\n"
+            f"2. Include dramatic lighting, vivid contrasting colors (neon yellow, electric blue, crimson red), and 8k cinematic details.\n"
+            f"3. NEVER include text, words, letters, or quotes inside the image prompt.\n"
+            f"Return ONLY the image prompt text."
+        )
+        res = client.generate_text(prompt, max_tokens=100)
+        clean = res.strip().replace('"', '').replace('\n', ' ')
+        for prefix in ["Here is a prompt:", "Here is the prompt:", "Here is a descriptive", "Here is the visual prompt:", "Here is a", "Here is the"]:
+            if clean.lower().startswith(prefix.lower()):
+                clean = clean[len(prefix):].strip()
+        if len(clean) > 10:
+            print(f"[Thumbnail] Generated visual prompt: '{clean}'")
+            return clean
+    except Exception as e:
+        print(f"[Thumbnail] Visual prompt generation failed: {e}")
+    return f"Cinematic 4k high contrast YouTube thumbnail background for {topic or thumbnail_text}"
+
 def generate_thumbnail(final_video_path: str, thumbnail_text: str, topic_prompt: str = "") -> str:
     print(f"Generating thumbnail for '{thumbnail_text}'...")
     os.makedirs("output", exist_ok=True)
@@ -115,13 +142,15 @@ def generate_thumbnail(final_video_path: str, thumbnail_text: str, topic_prompt:
     hook_frame_path = "output/hook_frame.jpg"
     thumbnail_path  = "output/thumbnail.jpg"
 
-    # 1. Try Gemini API key first (Nano Banana / Flash Image)
-    prompt_query = topic_prompt or thumbnail_text
-    bg_bytes = _generate_gemini_bg_image(prompt_query)
+    # 1. Generate dedicated visual prompt for AI image generator
+    vivid_prompt = _generate_vivid_thumbnail_prompt(topic_prompt, thumbnail_text)
+
+    # 2. Try Gemini API key first (Nano Banana / Flash Image)
+    bg_bytes = _generate_gemini_bg_image(vivid_prompt)
     
-    # 2. Fallback to Pollinations AI generator if Gemini rate-limited
+    # 3. Fallback to Pollinations AI generator if Gemini rate-limited
     if not bg_bytes:
-        bg_bytes = _generate_pollinations_bg_image(prompt_query)
+        bg_bytes = _generate_pollinations_bg_image(vivid_prompt)
         
     # 3. If AI image generation succeeded, save to hook_frame_path
     if bg_bytes:

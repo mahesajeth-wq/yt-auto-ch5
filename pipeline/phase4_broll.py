@@ -1187,9 +1187,12 @@ def _extract_collage_to_file(video_path: str, out_path: str) -> bool:
         if duration <= 0:
             return False
             
-        # Extract 3 frames at 20%, 50%, 80%
-        timestamps = [duration * 0.2, duration * 0.5, duration * 0.8]
+        # Extract 3 frames past initial 1.5s intro slide (at 25%, 55%, 85% of remaining duration)
+        start_offset = 1.5 if duration > 4.0 else 0.0
+        rem_dur = max(1.0, duration - start_offset)
+        timestamps = [start_offset + rem_dur * 0.25, start_offset + rem_dur * 0.55, start_offset + rem_dur * 0.85]
         frames = []
+        import numpy as np
         
         for idx, ts in enumerate(timestamps):
             temp_frame = f"{video_path}_collage_f_{idx}.jpg"
@@ -1203,6 +1206,14 @@ def _extract_collage_to_file(video_path: str, out_path: str) -> bool:
             if os.path.exists(temp_frame):
                 try:
                     img = Image.open(temp_frame).convert("RGB")
+                    arr = np.array(img)
+                    mean_lum = float(np.mean(arr))
+                    std_lum = float(np.std(arr))
+                    # Reject black screens, dark loading screens, or white flash screens
+                    if mean_lum < 15.0 or mean_lum > 245.0 or std_lum < 8.0:
+                        print(f"[B-roll] Rejecting dark/flash frame at {ts:.2f}s (mean_lum={mean_lum:.1f}, std={std_lum:.1f})")
+                        os.remove(temp_frame)
+                        continue
                     # Resize to keep aspect ratio but limit size (e.g. height 240)
                     img.thumbnail((320, 240))
                     frames.append((img, temp_frame))
