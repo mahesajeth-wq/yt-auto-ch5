@@ -785,7 +785,13 @@ def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
                     duration = entry.get('duration')
                     
                     duration_secs = float(duration) if duration else 0.0
-                    if duration_secs > 0.0 and (duration_secs < 5.0 or duration_secs > 1800.0):
+                    if duration_secs > 0.0 and (duration_secs < 12.0 or duration_secs > 1800.0):
+                        continue
+                    
+                    # Filter out lecture/classroom/blackboard titles unless explicitly requested
+                    title_lower = title.lower()
+                    if any(bad in title_lower for bad in ["lecture", "classroom", "blackboard", "chalkboard", "whiteboard", "tutorial", "course", "teacher", "presentation", "lesson"]):
+                        print(f"[B-roll] Skipping lecture/classroom candidate: '{title}'")
                         continue
                     
                     video_id = entry.get('id')
@@ -887,6 +893,31 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
                         break
             success = os.path.exists(out_path) and os.path.getsize(out_path) > 10_000
             if success:
+                # Verify actual duration with ffprobe to prevent short repeating clips or corrupt downloads
+                try:
+                    cmd_dur = ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", out_path]
+                    res_dur = subprocess.run(cmd_dur, capture_output=True, text=True, timeout=10)
+                    act_dur = float(res_dur.stdout.strip())
+                    if act_dur > 0.0 and act_dur < 6.0:
+                        print(f"[B-roll] Downloaded slice too short ({act_dur:.2f}s < 6.0s). Rejecting candidate to prevent repeating clip loop.")
+                        if os.path.exists(out_path):
+                            os.remove(out_path)
+                        return False
+                except Exception as e_dur:
+                    print(f"[B-roll] Warning: Could not verify downloaded clip duration or corrupt video ({e_dur}). Testing container integrity...")
+                    try:
+                        test_cmd = ["ffmpeg", "-v", "error", "-i", out_path, "-t", "1", "-f", "null", "-"]
+                        test_res = subprocess.run(test_cmd, capture_output=True, timeout=10)
+                        if test_res.returncode != 0:
+                            print(f"[B-roll] Video container corrupted. Rejecting candidate.")
+                            if os.path.exists(out_path):
+                                os.remove(out_path)
+                            return False
+                    except Exception:
+                        if os.path.exists(out_path):
+                            os.remove(out_path)
+                        return False
+
                 # Save credit metadata for on-screen attribution in phase 7
                 uploader = info.get("uploader") or info.get("channel") or (candidate_info.get("uploader_name") if candidate_info else "YouTube")
                 handle = candidate_info.get("uploader_handle") if candidate_info else None

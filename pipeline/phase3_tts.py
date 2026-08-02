@@ -129,26 +129,34 @@ def split_combined_audio(combined_path: str, segments: list[dict]):
                 slice_starts.append(start_time)
                 slice_ends.append(end_time)
             
-            # 3. Perform slicing
+            # 3. Perform slicing with soundfile (sample-accurate, zero FFmpeg bugs)
+            import soundfile as sf
+            data, sr = sf.read(combined_path)
+            total_samples = len(data)
+
             for i, seg in enumerate(segments):
                 start_time = slice_starts[i]
                 end_time = slice_ends[i]
+                
+                start_sample = max(0, int(start_time * sr))
+                end_sample = min(total_samples, int(end_time * sr))
+                if end_sample <= start_sample + int(0.2 * sr):
+                    end_sample = min(total_samples, start_sample + int(0.5 * sr))
                     
                 out_path = f"output/tts_segment_{seg['id']}.wav"
-                print(f"[TTS] Slicing Segment {seg['id']}: {start_time:.3f}s -> {end_time:.3f}s")
-                cmd = [
-                    "ffmpeg", "-y", "-ss", f"{start_time:.3f}", "-to", f"{end_time:.3f}",
-                    "-i", combined_path, out_path
-                ]
-                subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                print(f"[TTS] Slicing Segment {seg['id']}: {start_time:.3f}s -> {end_time:.3f}s ({end_sample - start_sample} samples)")
+                sf.write(out_path, data[start_sample:end_sample], sr)
             return
     except Exception as e:
         print(f"[TTS] Word alignment split failed: {e}. Falling back to proportional split.")
         
     # Proportional split fallback
-    total_duration = get_wav_duration(combined_path)
+    import soundfile as sf
+    data, sr = sf.read(combined_path)
+    total_samples = len(data)
+    total_duration = len(data) / sr
     weights = [len(seg["narration"]) for seg in segments]
-    total_weight = sum(weights)
+    total_weight = sum(weights) if sum(weights) > 0 else 1
     
     current_time = 0.0
     for i, seg in enumerate(segments):
@@ -157,13 +165,14 @@ def split_combined_audio(combined_path: str, segments: list[dict]):
         if i == len(segments) - 1:
             end_time = total_duration
             
+        start_sample = max(0, int(current_time * sr))
+        end_sample = min(total_samples, int(end_time * sr))
+        if end_sample <= start_sample + int(0.2 * sr):
+            end_sample = min(total_samples, start_sample + int(0.5 * sr))
+            
         out_path = f"output/tts_segment_{seg['id']}.wav"
-        print(f"[TTS] Proportional slicing Segment {seg['id']}: {current_time:.3f}s -> {end_time:.3f}s")
-        cmd = [
-            "ffmpeg", "-y", "-ss", f"{current_time:.3f}", "-to", f"{end_time:.3f}",
-            "-i", combined_path, out_path
-        ]
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        print(f"[TTS] Proportional slicing Segment {seg['id']}: {current_time:.3f}s -> {end_time:.3f}s ({end_sample - start_sample} samples)")
+        sf.write(out_path, data[start_sample:end_sample], sr)
         current_time = end_time
 
 def generate_audio(script: dict) -> list[str]:
@@ -231,33 +240,49 @@ def generate_audio(script: dict) -> list[str]:
             print(f"[TTS] Split combined audio failed: {split_err}")
             gemini_failed = True
 
-    # ── Pass 2: Gemini failed combined. Switched to Kokoro combined. ──────────
-    print(f"[TTS] SWITCHING entire video to Kokoro '{ko_voice}'.")
-    if os.path.exists(combined_raw_path):
+    # ── Pass 2: Gemini combined splitting failed. Fallback to per-segment TTS ──
+    print(f"[TTS] Fallback: Generating TTS per-segment directly...")
+    audio_files = []
+    for seg in segments:
+        seg_id = seg["id"]
+        out_path = f"output/tts_segment_{seg_id}.wav"
+        text = seg["narration"]
+        
+        # Try per-segment Gemini TTS
+        generated = False
         try:
-            os.remove(combined_raw_path)
-        except Exception:
-            pass
+            audio_bytes, mime_type = gemini_client.generate_tts(
+                text,
+                voice=gemini_voice,
+                vocal_tone=script.get("vocal_tone"),
+                voiceover_plan=None
+            )
+            with wave.open(out_path, "wb") as wf:
+                wf.setnchannels(1)
+                wf.setsampwidth(2)
+                wf.setframerate(24000)
+                wf.writeframes(audio_bytes)
+            generated = True
+        except Exception as e:
+            print(f"[TTS] Per-segment Gemini failed for segment {seg_id}: {e}")
 
-    try:
-        import numpy as np
-        import soundfile as sf
-        from kokoro import KPipeline
-        pipeline_ko = KPipeline(lang_code="a")
-        
-        samples = []
-        for _, _, audio in pipeline_ko(full_text, voice=ko_voice, speed=1.0):
-            samples.append(audio)
-        audio_np = np.concatenate(samples)
-        audio_i16 = np.clip(audio_np * 32767, -32768, 32767).astype(np.int16)
-        
-        with wave.open(combined_raw_path, "wb") as wf:
-            wf.setnchannels(1)
-            wf.setsampwidth(2)
-            wf.setframerate(24000)
-            wf.writeframes(audio_i16.tobytes())
-            
-        split_combined_audio(combined_raw_path, segments)
-        return [f"output/tts_segment_{seg['id']}.wav" for seg in segments]
-    except Exception as ko_err:
-        raise RuntimeError(f"Kokoro combined generation failed: {ko_err}")
+        # Fallback to gTTS if per-segment Gemini fails
+        if not generated:
+            try:
+                from gtts import gTTS
+                tts = gTTS(text=text, lang='en')
+                temp_mp3 = f"output/temp_tts_{seg_id}.mp3"
+                tts.save(temp_mp3)
+                subprocess.run(
+                    ["ffmpeg", "-y", "-i", temp_mp3, "-ac", "1", "-ar", "24000", out_path],
+                    capture_output=True, check=True
+                )
+                if os.path.exists(temp_mp3):
+                    os.remove(temp_mp3)
+                generated = True
+            except Exception as g_err:
+                print(f"[TTS] gTTS fallback failed for segment {seg_id}: {g_err}")
+
+        audio_files.append(out_path)
+
+    return audio_files
