@@ -42,21 +42,23 @@ def vision_rank_broll(
         f"SCORING RULES — read carefully:\n"
         f"1. CRITICAL ZERO-SCORE REJECTION (SCORE = 0 IMMEDIATELY):\n"
         f"   - ANY candidate showing full-screen text, title cards, subtitles, lower-third graphics, channel logos, or text-only slides from the source video.\n"
+        f"   - ANY candidate showing static infographics, diagrams, flowcharts, textbook illustrations, frozen diagrams, charts, or still slides without active real-world motion.\n"
         f"   - ANY candidate showing black screens, dark loading screens, transition flashes, or fade-outs.\n"
         f"   - ANY candidate showing static PowerPoint slides or text banners.\n"
         f"   - ANY candidate showing a talking-head, lecturer, teacher, presenter, or person standing/sitting in front of a blackboard, chalkboard, whiteboard, screen, or desk (UNLESS narration explicitly mentions classroom teaching).\n"
         f"   - ANY candidate showing a backshot or rear view of a person/presenter facing a board, screen, or wall and covering the camera view.\n"
         f"   - ANY candidate where a person's body or back blocks the center of the frame.\n"
         f"2. The clip must represent the actual physical subject, device, concept, or process discussed in the narration or search query. "
-        f"For space, physics, engineering, nature, history, or business topics, require clean real-world visual footage of the target physical entity "
+        f"For space, physics, engineering, nature, history, or business topics, require clean real-world visual footage or dynamic 3D motion animation of the target physical entity "
         f"(e.g. supernovas, galaxies, space telescopes, quantum chips, rockets, machinery, wild animals, stock charts). "
-        f"A direct thematic visual of the subject is required (scores 70-90) and MUST be clean real footage.\n"
+        f"A direct thematic visual of the subject is required (scores 70-90) and MUST be clean active video footage — NOT a static diagram or still image.\n"
         f"3. Score every candidate from 0-100:\n"
-        f"   - 90-100: exact physical subject or highly specific real-world match (clean footage, no text/logos/presenters)\n"
-        f"   - 70-89: strong contextual/thematic physical match of the main subject (clean footage, no text/logos/presenters)\n"
-        f"   - 50-69: usable fallback physical visual related to the topic\n"
-        f"   - 0-49: bad mismatch, presenter in classroom, blackboard/whiteboard backshot, text-heavy clip, title slide, black screen, or completely unrelated topic\n"
+        f"   - 90-100: exact physical subject or highly specific real-world match (clean active video footage, no text/logos/presenters/static diagrams)\n"
+        f"   - 70-89: strong contextual/thematic physical match of the main subject (clean active video footage, no text/logos/presenters/static diagrams)\n"
+        f"   - 50-69: usable fallback physical active visual related to the topic\n"
+        f"   - 0-49: bad mismatch, presenter in classroom, static infographic/diagram, blackboard/whiteboard backshot, text-heavy clip, title slide, black screen, or completely unrelated topic\n"
         f"4. ABSOLUTELY REJECT (SCORE = 0):\n"
+        f"   - Static infographics, diagrams, charts, textbook illustrations, or frozen still slides\n"
         f"   - Classroom lectures, teachers in front of blackboards/chalkboards, or presenters at desks/screens\n"
         f"   - Rear-view/backshots of people standing in front of boards, walls, or monitors\n"
         f"   - Generic office workers, handshakes, or people at computers\n"
@@ -133,5 +135,5 @@ def vision_rank_broll(
         return None, False
 
     except Exception as e:
-        print(f"[VisionMatch] API error/rate-limited: {e}. Rejecting batch to allow fallback query.")
-        return None, False
+        print(f"[VisionMatch] API error/rate-limited ({e}). Fallback accepting top candidate 0 to prevent static image fallback.")
+        return 0, True

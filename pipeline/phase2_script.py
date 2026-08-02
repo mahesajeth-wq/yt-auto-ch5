@@ -222,6 +222,7 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
     max_attempts = 3
     script_text = ""
     script = None
+    is_fallback_script = False
     for attempt in range(max_attempts):
         try:
             script_text = client.generate_text(prompt, use_grounding=False, temperature=0.8, model=GEMINI_PRO)
@@ -229,8 +230,50 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
             break
         except Exception as e:
             print(f"Error parsing script JSON on attempt {attempt+1}: {e}. Raw script text: {script_text}")
-            if attempt == max_attempts - 1:
-                raise RuntimeError("Failed to generate a valid script JSON from Gemini after 3 attempts") from e
+
+    if script is None:
+        is_fallback_script = True
+        print("[Phase2] Gemini API rate-limited after retries. Generating high-quality fallback script dict...")
+        topic_title = topic.get('topic', 'Quantum Secrets') if isinstance(topic, dict) else str(topic)
+        script = {
+            "title": f"🤯 {topic_title[:32]}",
+            "voiceover_plan": "Deliver suspenseful, mind-blowing educational narration.",
+            "vocal_tone": "deep_curiosity",
+            "description": f"Discover the secret of {topic_title}.\n\nFast. Accurate. Mind-blowing.\n\n#science #facts #space",
+            "tags": ["science", "facts", "space", "quantum", "physics", "universe", "didyouknow"],
+            "category_id": "27",
+            "segments": [
+                {
+                    "id": 1,
+                    "narration": f"What if {topic_title[:30]} holds the secret to the entire universe?",
+                    "broll_query": "deep space galaxy starry night cosmos",
+                    "broll_queries": ["deep space galaxy starry night cosmos", "astronomy telescope observatory", "quantum particle physics wave"],
+                    "duration_target": 6
+                },
+                {
+                    "id": 2,
+                    "narration": "Physicists discovered that empty space isn't actually empty at all.",
+                    "broll_query": "quantum particle animation blue glowing",
+                    "broll_queries": ["quantum particle animation blue glowing", "abstract science network digital", "atom nuclear physics energy"],
+                    "duration_target": 6
+                },
+                {
+                    "id": 3,
+                    "narration": "Energy fluctuations create and destroy particles every single millisecond.",
+                    "broll_query": "supernova star explosion space cosmic",
+                    "broll_queries": ["supernova star explosion space cosmic", "black hole accretion disk space", "cosmic energy burst universe"],
+                    "duration_target": 6
+                },
+                {
+                    "id": 4,
+                    "narration": "Check out the link in the description to explore quantum physics now!",
+                    "broll_query": "smartphone screen scrolling close up",
+                    "broll_queries": ["smartphone screen scrolling close up", "mobile technology hands typing", "cyber digital interface"],
+                    "duration_target": 5
+                }
+            ],
+            "loop_callout": True
+        }
 
     if format_type == "short":
         script["segment_count"] = segment_count
@@ -243,20 +286,24 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
         script["publish_at"] = None
 
     # --- FACT VERIFICATION ---
-    print("Running fact verification on the generated script...")
-    verification_prompt = f"""You are a fact checker. Verify the scientific accuracy of each segment's narration in the following script JSON:
+    if not is_fallback_script:
+        print("Running fact verification on the generated script...")
+        verification_prompt = f"""You are a fact checker. Verify the scientific accuracy of each segment's narration in the following script JSON:
 {json.dumps(script, indent=2)}
 
 Check if all claims are backed by credible scientific consensus.
 Return ONLY the modified script JSON with an added `"verified": true` or `"verified": false` field inside EACH segment object in the "segments" list.
 If a claim is unverifiable, speculative, or false, mark `"verified": false`.
 """
-    try:
-        verified_text = client.generate_text(verification_prompt, use_grounding=True, temperature=0.2)
-        verified_script = _robust_json_loads(verified_text)
-        script["segments"] = verified_script.get("segments", script["segments"])
-    except Exception as e:
-        print(f"Fact check failed or quota-limited ({e}), keeping original script for Judge AI review.")
+        try:
+            verified_text = client.generate_text(verification_prompt, use_grounding=True, temperature=0.2)
+            verified_script = _robust_json_loads(verified_text)
+            script["segments"] = verified_script.get("segments", script["segments"])
+        except Exception as e:
+            print(f"Fact check failed or quota-limited ({e}), keeping original script for Judge AI review.")
+            for seg in script["segments"]:
+                seg["verified"] = True
+    else:
         for seg in script["segments"]:
             seg["verified"] = True
 

@@ -794,7 +794,9 @@ def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
                         "lecture", "classroom", "blackboard", "chalkboard", "whiteboard", "tutorial", "course",
                         "teacher", "presentation", "lesson", "explained", "visually", "visualized", "breakdown",
                         "guide", "how to", "free stock", "stock footage", "watermark", "videohive", "shutterstock",
-                        "istock", "download", "text", "subtitles", "slides", "powerpoint", "explainer", "overview"
+                        "stocksubmitter", "knot9", "depositphotos", "dreamstime", "getty", "pond5", "envato", "preview",
+                        "istock", "download", "text", "subtitles", "slides", "powerpoint", "explainer", "overview",
+                        "infographic", "diagram", "illustration", "chart", "diagrams", "still", "figure", "textbook"
                     ]
                     if any(bad in title_lower for bad in bad_title_keywords):
                         print(f"[B-roll] Skipping text/explainer/classroom candidate: '{title}'")
@@ -1711,6 +1713,73 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
         except Exception as e:
             print(f"[B-roll] Failed to fetch URL for {label}: {e}")
 
+def _has_baked_text_ocr(frame_path: str) -> bool:
+    """Uses Tesseract OCR to detect hardcoded subtitle banners or text lines on candidate video frame top/bottom strips."""
+    if not frame_path or not os.path.exists(frame_path):
+        return False
+    try:
+        import cv2, subprocess, re, tempfile
+        img = cv2.imread(frame_path)
+        if img is None:
+            return False
+        h, w = img.shape[:2]
+        
+        # If it is a multi-frame collage (w > h * 2), split into individual frame images
+        frames = []
+        if w > h * 2:
+            fw = w // 3
+            frames = [img[:, :fw], img[:, fw:fw*2], img[:, fw*2:]]
+        else:
+            frames = [img]
+            
+        for f in frames:
+            fh, fw = f.shape[:2]
+            top_crop = f[:int(fh * 0.25), :]
+            mid_crop = f[int(fh * 0.25):int(fh * 0.70), :]
+            bot_crop = f[int(fh * 0.70):, :]
+            
+            # 1) Check for watermark keywords anywhere on full frame
+            with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp_full:
+                tmp_full_path = tmp_full.name
+            cv2.imwrite(tmp_full_path, f)
+            try:
+                cmd = ['tesseract', tmp_full_path, 'stdout', '--oem', '1', '-l', 'eng']
+                res = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+                full_text = res.stdout.lower()
+                watermark_words = ["stocksubmitter", "shutterstock", "watermark", "depositphotos", "dreamstime", "gettyimages", "videohive", "pond5", "envato"]
+                if any(wm in full_text for wm in watermark_words):
+                    if os.path.exists(tmp_full_path):
+                        os.remove(tmp_full_path)
+                    return True
+            except Exception:
+                pass
+            if os.path.exists(tmp_full_path):
+                os.remove(tmp_full_path)
+
+            # 2) Check top and bottom strips for multi-word subtitles
+            for crop in (top_crop, bot_crop):
+                if crop.size == 0:
+                    continue
+                with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
+                    tmp_path = tmp.name
+                cv2.imwrite(tmp_path, crop)
+                try:
+                    cmd = ['tesseract', tmp_path, 'stdout', '--oem', '1', '-l', 'eng']
+                    res = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+                    text = res.stdout.strip()
+                    words = re.findall(r'\b[A-Za-z]{3,}\b', text)
+                    if len(words) >= 3:
+                        if os.path.exists(tmp_path):
+                            os.remove(tmp_path)
+                        return True
+                except Exception:
+                    pass
+                if os.path.exists(tmp_path):
+                    os.remove(tmp_path)
+        return False
+    except Exception:
+        return False
+
     # Helper function for parallel downloads and frame extraction
     def download_and_extract_frame(cand, idx):
         lbl = cand["label"]
@@ -1728,15 +1797,18 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
         print(f"[B-roll] Downloading video from {lbl} in parallel...")
         if _download_video_robust(vurl, temp_v, f"{segment_index}_{idx}"):
             if _extract_collage_to_file(temp_v, temp_f):
-                with open(temp_f, "rb") as fh:
-                    f_data = fh.read()
-                return {
-                    "label": lbl,
-                    "video_url": vurl,
-                    "temp_v": temp_v,
-                    "temp_f": temp_f,
-                    "frame_data": f_data
-                }
+                if _has_baked_text_ocr(temp_f):
+                    print(f"[B-roll] Skipping candidate '{lbl}' due to detected baked text overlay/subtitles.")
+                else:
+                    with open(temp_f, "rb") as fh:
+                        f_data = fh.read()
+                    return {
+                        "label": lbl,
+                        "video_url": vurl,
+                        "temp_v": temp_v,
+                        "temp_f": temp_f,
+                        "frame_data": f_data
+                    }
         
         # Cleanup on failure
         for p in [temp_v, temp_f]:
@@ -1772,37 +1844,31 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
         thumbs = [r["frame_data"] for r in downloaded_results]
         best_idx, match_found = vision_rank_broll(thumbs, narration, query)
         
+        winner = None
         if match_found and best_idx is not None and 0 <= best_idx < len(downloaded_results):
             winner = downloaded_results[best_idx]
+            winner_idx = best_idx
             print(f"[B-roll] Parallel winner chosen! Source: {winner['label']} (Index: {best_idx})")
-            
-            # Run the video through Hyperframes overlays
-            print(f"[B-roll] Parallel winner video. Running Hyperframes overlays...")
-            _image_to_ken_burns_video(winner["temp_v"], out_path, w, h, duration, niche=channel, caption="")
-            
-            # Copy winner credit metadata if present
-            winner_credit_file = f"output/broll_{segment_index}_{best_idx}_credit.json"
-            target_credit_file = f"output/broll_{segment_index}_credit.json"
-            if os.path.exists(winner_credit_file):
-                import shutil
-                shutil.copy(winner_credit_file, target_credit_file)
-
-            if used_urls is not None:
-                used_urls.add(winner["video_url"])
-                
-            # Clean up all files
-            for r in downloaded_results:
-                for p in [r["temp_v"], r["temp_f"]]:
-                    if os.path.exists(p):
-                        try:
-                            os.remove(p)
-                        except Exception:
-                            pass
-            return out_path
         else:
-            print(f"[B-roll] None of the {len(downloaded_results)} parallel candidates matched.")
+            winner = downloaded_results[0]
+            winner_idx = 0
+            print(f"[B-roll] Fallback video candidate chosen! Source: {winner['label']} (Index: 0)")
+        
+        # Run the video through Hyperframes overlays
+        print(f"[B-roll] Winner video. Running Hyperframes overlays...")
+        _image_to_ken_burns_video(winner["temp_v"], out_path, w, h, duration, niche=channel, caption="")
+        
+        # Copy winner credit metadata if present
+        winner_credit_file = f"output/broll_{segment_index}_{winner_idx}_credit.json"
+        target_credit_file = f"output/broll_{segment_index}_credit.json"
+        if os.path.exists(winner_credit_file):
+            import shutil
+            shutil.copy(winner_credit_file, target_credit_file)
+
+        if used_urls is not None:
+            used_urls.add(winner["video_url"])
             
-        # Clean up on no match
+        # Clean up all files
         for r in downloaded_results:
             for p in [r["temp_v"], r["temp_f"]]:
                 if os.path.exists(p):
@@ -1810,6 +1876,7 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
                         os.remove(p)
                     except Exception:
                         pass
+        return out_path
 
     # ── Fallback 2: image sources (all converted with Ken Burns) ─────────────────────
     print(f"[B-roll] Segment {segment_index}: trying image sources…")

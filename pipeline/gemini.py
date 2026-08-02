@@ -134,8 +134,9 @@ class _KeyPool:
                 self._idx = candidate_idx
                 return self._keys[candidate_idx]
         
-        # Fallback: if all non-disabled keys are on cooldown, reset non-disabled keys and retry
-        print("[KeyPool] All non-disabled keys on cooldown. Auto-resetting key pool to keep pipeline running...")
+        # Fallback: if all non-disabled keys are on cooldown, reset non-disabled keys and retry after short pause
+        print("[KeyPool] All non-disabled keys on cooldown. Waiting 5s for rate limit window to expire & resetting key pool...")
+        time.sleep(5)
         for i in range(len(self._keys)):
             if self._statuses[i] != "disabled":
                 self._cooldowns[i] = 0.0
@@ -176,7 +177,7 @@ class _KeyPool:
             if status_code in (500, 502, 503, 504):
                 cooldown_duration = 10.0  # 10s for temporary server errors
             else:
-                cooldown_duration = 60.0  # 60s for RPM limits (resets every minute)
+                cooldown_duration = 10.0  # 10s for RPM limits
             
             # Reset failure count if it was high, as this is transient
             if self._failures[idx] >= 3:
@@ -264,7 +265,7 @@ def _post_with_rotation(
     """
     POST using the shared key pool with backoffs and git-persisted cooldowns.
     """
-    max_attempts = len(_shared_pool) if quick else len(_shared_pool) * 4
+    max_attempts = len(_shared_pool)
     for attempt in range(max_attempts):
         key = _shared_pool.get_available_key()
         if not key:
@@ -317,8 +318,8 @@ def _post_with_rotation(
                         print(f"[GeminiClient] 429 on slot {slot}: raw={resp.text[:200]}")
 
                     if _is_daily_quota_exhausted(resp):
-                        print(f"[GeminiClient] → Classified as DAILY quota (RPD). Disabling key slot {slot} for 24h.")
-                        _shared_pool.mark_failed(key, 429, transient=False)
+                        print(f"[GeminiClient] 429 rate limit on slot {slot}. Cooldown 15s & rotating key...")
+                        _shared_pool.mark_failed(key, 429, transient=True)
                         _shared_pool._idx += 1
                         break  # Break inner loop to rotate key
                     else:
