@@ -2,6 +2,8 @@ import os
 import wave
 import shutil
 import subprocess
+import json
+import re
 from pipeline.sfx import create_sfx_track
 
 def get_wav_duration(filepath: str) -> float:
@@ -94,7 +96,7 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
                     if handle:
                         if handle not in seen_handles:
                             seen_handles.add(handle)
-                            all_footage_credits.append({
+                            footage_credits.append({
                                 "handle": handle,
                                 "url": url,
                                 "title": title
@@ -113,7 +115,6 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
         is_hyperframes = broll_path and ("output/broll_" in broll_path or "/output/broll_" in broll_path)
         
         if is_hyperframes:
-            print(f"Bypassing scale/crop/pan for Hyperframes output: {broll_path}")
             vf_chain = "setsar=1" + drawtext_chain
         else:
             # Base scale-crop to cover full bleed with unsharp masking for enhanced clarity
@@ -180,7 +181,8 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
     assembled_video_path = "output/assembled_video.mp4"
     cmd = [
         "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", concat_list_path,
-        "-c", "copy", assembled_video_path
+        "-c:v", "libx264", "-preset", "fast", "-crf", "20", "-pix_fmt", "yuv420p",
+        assembled_video_path
     ]
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 

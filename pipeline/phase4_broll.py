@@ -1,4 +1,5 @@
 import os
+import re
 import random
 import requests
 import urllib.parse
@@ -749,7 +750,7 @@ def _parse_iso_duration(duration_str: str) -> float:
 
 def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
     """
-    Search YouTube for matchable B-roll clips using broad ytsearch query with negative keywords.
+    Search YouTube for matchable B-roll clips using broad ytsearch query.
     Captures uploader channel handle for on-screen Fair Use attribution.
     """
     import yt_dlp
@@ -758,75 +759,73 @@ def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
     
     candidates = []
     seen_urls = set()
-    try:
-        clean_q = f"{query} b-roll 4k -vlog -talking -face -commentary -reaction -shorts"
-        print(f"[B-roll] Searching YouTube for: '{clean_q}'...")
-        
-        ydl_opts = {
-            'quiet': True,
-            'extract_flat': True,
-            'force_generic_extractor': False,
-        }
-        
-        search_target = f"ytsearch{n*3}:{clean_q}"
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            result = ydl.extract_info(search_target, download=False)
-            entries = result.get('entries', []) if result else []
-            
-            for entry in entries:
-                if not entry:
-                    continue
-                title = entry.get('title', '')
-                url = entry.get('url', '')
-                duration = entry.get('duration')
+    search_queries = [f"{query} footage", query, f"{query} 4k"]
+    
+    ydl_opts = {
+        'quiet': True,
+        'extract_flat': True,
+        'force_generic_extractor': False,
+    }
+    
+    for sq in search_queries:
+        if len(candidates) >= n:
+            break
+        try:
+            print(f"[B-roll] Searching YouTube for: '{sq}'...")
+            search_target = f"ytsearch{n*2}:{sq}"
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                result = ydl.extract_info(search_target, download=False)
+                entries = result.get('entries', []) if result else []
                 
-                # Filter out shorts (< 8s) or excessively long videos (> 20 min)
-                duration_secs = float(duration) if duration else 0.0
-                if duration_secs > 0.0 and (duration_secs < 8.0 or duration_secs > 1200.0):
-                    continue
-                
-                # Derive video_id and canonical URL
-                video_id = entry.get('id')
-                if not video_id and url:
-                    m_id = re.search(r'(?:v=|\/)([^&\n?#]+)', url)
-                    if m_id:
-                        video_id = m_id.group(1)
-                
-                if not video_id:
-                    continue
+                for entry in entries:
+                    if not entry:
+                        continue
+                    title = entry.get('title', '')
+                    url = entry.get('url', '')
+                    duration = entry.get('duration')
                     
-                full_url = f"https://www.youtube.com/watch?v={video_id}"
-                if full_url in seen_urls:
-                    continue
-                seen_urls.add(full_url)
-                
-                # Extract uploader channel handle
-                uploader = entry.get('uploader') or entry.get('channel') or entry.get('uploader_id') or "YouTube"
-                clean_uploader = re.sub(r'[^a-zA-Z0-9_-]', '', str(uploader))
-                handle = f"@{clean_uploader}" if clean_uploader else "@YouTube"
-                
-                # High-reliability thumbnail URL (hqdefault.jpg)
-                thumb_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
-                
-                candidates.append({
-                    "source": "YouTube",
-                    "video_url": full_url,
-                    "thumb_url": thumb_url,
-                    "title": title,
-                    "description": entry.get('description', '') or "",
-                    "duration": duration_secs,
-                    "uploader_name": uploader,
-                    "uploader_handle": handle
-                })
-                
-                if len(candidates) >= n:
-                    break
-
-        print(f"[B-roll] Found {len(candidates)} YouTube candidate clips.")
-        return candidates
-    except Exception as e:
-        print(f"[B-roll] YouTube search failed: {e}")
-        return []
+                    duration_secs = float(duration) if duration else 0.0
+                    if duration_secs > 0.0 and (duration_secs < 5.0 or duration_secs > 1800.0):
+                        continue
+                    
+                    video_id = entry.get('id')
+                    if not video_id and url:
+                        m_id = re.search(r'(?:v=|\/)([^&\n?#]+)', url)
+                        if m_id:
+                            video_id = m_id.group(1)
+                    
+                    if not video_id:
+                        continue
+                        
+                    full_url = f"https://www.youtube.com/watch?v={video_id}"
+                    if full_url in seen_urls:
+                        continue
+                    seen_urls.add(full_url)
+                    
+                    uploader = entry.get('uploader') or entry.get('channel') or entry.get('uploader_id') or "YouTube"
+                    clean_uploader = re.sub(r'[^a-zA-Z0-9_-]', '', str(uploader))
+                    handle = f"@{clean_uploader}" if clean_uploader else "@YouTube"
+                    
+                    thumb_url = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
+                    
+                    candidates.append({
+                        "source": "YouTube",
+                        "video_url": full_url,
+                        "thumb_url": thumb_url,
+                        "title": title,
+                        "description": entry.get('description', '') or "",
+                        "duration": duration_secs,
+                        "uploader_name": uploader,
+                        "uploader_handle": handle
+                    })
+                    
+                    if len(candidates) >= n:
+                        break
+        except Exception as e:
+            print(f"[B-roll] YouTube search failed for '{sq}': {e}")
+            
+    print(f"[B-roll] Found {len(candidates)} YouTube candidate clips.")
+    return candidates
 
 
 def _download_video_robust(url: str, out_path: str, segment_index: int, candidate_info: dict | None = None) -> bool:
@@ -839,7 +838,7 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
             duration_secs = 0.0
             info = {}
             try:
-                cmd_info = ["yt-dlp", "--dump-json", "--extract-flat", url]
+                cmd_info = ["yt-dlp", "--dump-json", "--no-check-certificates", url]
                 res_info = subprocess.run(cmd_info, capture_output=True, text=True, check=True)
                 info = json.loads(res_info.stdout)
                 duration_secs = float(info.get("duration", 0.0))
@@ -962,10 +961,25 @@ def _shorten_narration(text: str, max_words: int = 10) -> str:
 
 def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, duration: float = 6.0, niche: str = "general", caption: str = ""):
     """
-    Converts a static image to a video with a slow cinematic zoom (Ken Burns effect).
-    Tries HeyGen Hyperframes for high-quality niche-specific motion overlays.
-    Falls back to robust FFmpeg zoompan filter if Hyperframes fails.
+    Converts a static image or video clip to a normalized video.
+    If input is already a video asset, normalizes directly with FFmpeg.
+    If input is an image, tries Hyperframes for motion overlays, falling back to Ken Burns zoompan.
     """
+    ext = os.path.splitext(img_path)[1].lower()
+    is_video = ext in [".mp4", ".webm", ".ogv", ".mov", ".avi"] or "video" in img_path.lower() or img_path.endswith("_video")
+    
+    if is_video:
+        print(f"[B-roll] Normalizing video asset: {img_path} -> {out_path}")
+        cmd = [
+            "ffmpeg", "-y", "-i", img_path,
+            "-vf", f"scale=trunc({w}/2)*2:trunc({h}/2)*2:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1",
+            "-t", str(duration), "-r", "30",
+            "-c:v", "libx264", "-preset", "fast", "-crf", "20", "-pix_fmt", "yuv420p",
+            "-an", out_path
+        ]
+        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        return
+
     try:
         if os.environ.get("DISABLE_HYPERFRAMES", "0") == "1":
             raise RuntimeError("Hyperframes disabled via DISABLE_HYPERFRAMES")
@@ -987,7 +1001,6 @@ def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, dura
         template_dir = os.path.abspath("pipeline/hyperframes_templates")
         
         # Copy input asset to template directory to avoid CORS/Same-Origin file:// loading blocks in Puppeteer/Chrome
-        ext = os.path.splitext(img_path)[1].lower()
         temp_filename = f"temp_{uuid.uuid4().hex}{ext}"
         temp_path = os.path.join(template_dir, temp_filename)
         shutil.copy2(img_path, temp_path)
@@ -1029,22 +1042,6 @@ def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, dura
             print("[B-roll] Hyperframes disabled via DISABLE_HYPERFRAMES. Using FFmpeg directly.")
         else:
             print(f"[B-roll] Hyperframes execution error: {e}. Falling back to FFmpeg.")
-
-
-    ext = os.path.splitext(img_path)[1].lower()
-    is_video = ext in [".mp4", ".webm", ".ogv", ".mov", ".avi"]
-    
-    if is_video:
-        print(f"[B-roll] Normalizing video fallback: {img_path} -> {out_path}")
-        cmd = [
-            "ffmpeg", "-y", "-i", img_path,
-            "-vf", f"scale=trunc({w}/2)*2:trunc({h}/2)*2:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1",
-            "-t", str(duration), "-r", "30",
-            "-c:v", "libx264", "-preset", "fast", "-crf", "20", "-pix_fmt", "yuv420p",
-            "-an", out_path
-        ]
-        subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return
 
     fps    = 30
     frames = int(duration * fps)
@@ -1354,27 +1351,6 @@ def _score_candidate(item: dict, query: str, target_duration: float = 8.0) -> fl
     return float(overlap_score + res_score + dur_score + source_score)
 
 
-def fetch_broll(query: str, format_type: str, segment_index: int, duration: float = 6.0, narration: str = "", alt_queries: list[str] | None = None, used_urls: set[str] | None = None, channel: str = "general") -> str:
-    """
-    Unified B-roll candidate ranking across multiple platforms (YouTube CC prioritized, Coverr, Pexels, Pixabay, NASA, Wikimedia)
-    using Gemini Vision matching and URL de-duplication.
-    """
-    orientation = "portrait" if format_type == "short" else "landscape"
-    out_path    = f"output/broll_{segment_index}.mp4"
-    img_path    = f"output/broll_{segment_index}.jpg"
-    w, h        = (1080, 1920) if format_type == "short" else (1920, 1080)
-    budget_default = "180" if format_type == "short" else "240"
-    budget_seconds = int(os.environ.get("BROLL_SEGMENT_BUDGET_SECONDS", budget_default))
-    deadline = time.monotonic() + budget_seconds
-
-    def budget_exceeded() -> bool:
-        if time.monotonic() <= deadline:
-            return False
-        print(f"[B-roll] Segment {segment_index}: time budget exceeded ({budget_seconds}s). Using fast fallback.")
-        return True
-
-    os.makedirs("output", exist_ok=True)
-
 def sanitize_broll_query(query: str) -> str:
     """
     Sanitize B-roll query by removing abstract adjectives, verbs, and meta-descriptions
@@ -1400,6 +1376,28 @@ def sanitize_broll_query(query: str) -> str:
 
 def _sanitize_broll_query(query: str) -> str:
     return sanitize_broll_query(query)
+
+
+def fetch_broll(query: str, format_type: str, segment_index: int, duration: float = 6.0, narration: str = "", alt_queries: list[str] | None = None, used_urls: set[str] | None = None, channel: str = "general") -> str:
+    """
+    Unified B-roll candidate ranking across multiple platforms (YouTube CC prioritized, Coverr, Pexels, Pixabay, NASA, Wikimedia)
+    using Gemini Vision matching and URL de-duplication.
+    """
+    orientation = "portrait" if format_type == "short" else "landscape"
+    out_path    = f"output/broll_{segment_index}.mp4"
+    img_path    = f"output/broll_{segment_index}.jpg"
+    w, h        = (1080, 1920) if format_type == "short" else (1920, 1080)
+    budget_default = "180" if format_type == "short" else "240"
+    budget_seconds = int(os.environ.get("BROLL_SEGMENT_BUDGET_SECONDS", budget_default))
+    deadline = time.monotonic() + budget_seconds
+
+    def budget_exceeded() -> bool:
+        if time.monotonic() <= deadline:
+            return False
+        print(f"[B-roll] Segment {segment_index}: time budget exceeded ({budget_seconds}s). Using fast fallback.")
+        return True
+
+    os.makedirs("output", exist_ok=True)
 
     # Return cached clip if already valid
     if os.path.exists(out_path) and os.path.getsize(out_path) > 10_000:
@@ -1734,6 +1732,13 @@ def _sanitize_broll_query(query: str) -> str:
             print(f"[B-roll] Parallel winner video. Running Hyperframes overlays...")
             _image_to_ken_burns_video(winner["temp_v"], out_path, w, h, duration, niche=channel, caption="")
             
+            # Copy winner credit metadata if present
+            winner_credit_file = f"output/broll_{segment_index}_{best_idx}_credit.json"
+            target_credit_file = f"output/broll_{segment_index}_credit.json"
+            if os.path.exists(winner_credit_file):
+                import shutil
+                shutil.copy(winner_credit_file, target_credit_file)
+
             if used_urls is not None:
                 used_urls.add(winner["video_url"])
                 

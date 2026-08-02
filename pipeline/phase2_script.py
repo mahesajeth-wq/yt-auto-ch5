@@ -68,7 +68,8 @@ search term of 1-3 CONCRETE PHYSICAL NOUNS MAXIMUM (e.g., "water pipes", "ancien
 Write exactly what a human would type into a stock video search bar. Use concrete nouns and visual objects — NOT instructions, verbs, or descriptions of what you want.
 
 CRITICAL BROLL QUERY RULES:
-- MUST be 1-3 simple, concrete physical nouns (e.g. "water pipes", "ancient scroll", "mummy coffin", "sea sponges", "gold jewelry", "smartphone").
+- EVERY segment's broll_query MUST directly represent the exact physical subject mentioned in THAT SPECIFIC segment's narration line! (e.g., if narration mentions Pluto or Charon, broll_query MUST be "Pluto moon", "spinning planet", or "mountain range aerial"). NEVER output unrelated terms like "black hole" unless the narration explicitly mentions black holes!
+- MUST be 1-3 simple, concrete physical nouns (e.g. "water pipes", "ancient scroll", "mummy coffin", "sea sponges", "gold jewelry", "smartphone", "mountain peaks aerial").
 - NEVER include abstract adjectives, verbs, or meta-words like "animated", "defect", "dramatic", "unraveling", "stuck", "shattered", "cross section", "concept", "visualization", "illustration".
 - Write queries that represent real physical footage found in stock video libraries or YouTube documentaries.
 
