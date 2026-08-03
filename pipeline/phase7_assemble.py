@@ -77,8 +77,8 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
                 print(f"[Assemble] Generating dynamic synthetic motion clip for segment {i}...")
                 cmd_synth = [
                     "ffmpeg", "-y", "-f", "lavfi",
-                    "-i", f"color=c=0x0f172a:s={w}x{h}:r=30:d={duration:.3f}",
-                    "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
+                    "-i", f"testsrc2=s={w}x{h}:r=30,eq=contrast=1.2:saturation=1.4,hue=s=1:h=t*35",
+                    "-t", f"{duration:.3f}", "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
                 ]
                 subprocess.run(cmd_synth, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
