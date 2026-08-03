@@ -77,8 +77,8 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
                 print(f"[Assemble] Generating dynamic synthetic motion clip for segment {i}...")
                 cmd_synth = [
                     "ffmpeg", "-y", "-f", "lavfi",
-                    "-i", f"cellauto=s={w}x{h}:r=30,format=pix_fmt=yuv420p",
-                    "-t", f"{duration:.3f}", "-c:v", "libx264", broll_path
+                    "-i", f"color=c=0x0f172a:s={w}x{h}:r=30:d={duration:.3f}",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
                 ]
                 subprocess.run(cmd_synth, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -123,35 +123,35 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2 + (t-{duration}/2)*15':'(in_h-out_h)/2 + (t-{duration}/2)*15',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1" + drawtext_chain
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
                 )
             elif motion_idx == 1:
                 # 2. Slow Panning Upward
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2 + (t-{duration}/2)*22',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1" + drawtext_chain
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
                 )
             elif motion_idx == 2:
                 # 3. Slow Panning Downward
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2 - (t-{duration}/2)*22',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1" + drawtext_chain
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
                 )
             elif motion_idx == 3:
                 # 4. Slow Panning Right
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2 + (t-{duration}/2)*22':'(in_h-out_h)/2',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1" + drawtext_chain
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
                 )
             else:
                 # 5. Slow Panning Left
                 vf_chain = (
                     f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
                     f"crop={w}:{h}:'(in_w-out_w)/2 - (t-{duration}/2)*22':'(in_h-out_h)/2',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=PI/7,setsar=1" + drawtext_chain
+                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
                 )
             
         cmd = [

@@ -205,7 +205,7 @@ def generate_captions(audio_files: list[str], script: dict, format_type: str = "
         ("Bebas Neue", "https://github.com/google/fonts/raw/main/ofl/bebasneue/BebasNeue-Regular.ttf"),
         ("Anton", "https://github.com/google/fonts/raw/main/ofl/anton/Anton-Regular.ttf"),
         ("Oswald", "https://github.com/google/fonts/raw/main/ofl/oswald/static/Oswald-Bold.ttf"),
-        ("Montserrat ExtraBold", "https://github.com/google/fonts/raw/main/ofl/montserrat/static/Montserrat-ExtraBold.ttf"),
+        ("Montserrat Bold", "https://github.com/google/fonts/raw/main/ofl/montserrat/Montserrat-Bold.ttf"),
         ("Archivo Black", "https://github.com/google/fonts/raw/main/ofl/archivoblack/ArchivoBlack-Regular.ttf")
     ]
     import random
