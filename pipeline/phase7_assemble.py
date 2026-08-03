@@ -65,20 +65,20 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
         ss_offset = ss_offsets[i]
         norm_path = f"output/broll_{i}_norm.mp4"
         
-        # Handle missing/None broll_path gracefully
+        # Handle missing/None broll_path gracefully by reusing valid video clips from other segments
         if not broll_path or not os.path.exists(broll_path):
-            print(f"[Assemble] Warning: Segment {i} B-roll is missing/None ({broll_path}). Generating emergency fallback clip...")
-            broll_path = f"output/emergency_broll_{i}.mp4"
-            img_p = f"output/emergency_broll_{i}.jpg"
-            try:
-                import pipeline.phase4_broll as phase4
-                phase4._pil_placeholder(seg.get("broll_query", "science"), w, h, img_p)
-                phase4._image_to_ken_burns_video(img_p, broll_path, w, h, duration, niche="general")
-            except Exception as eerr:
-                print(f"[Assemble] Emergency generator failed: {eerr}. Using color synthetic clip.")
+            print(f"[Assemble] Warning: Segment {i} B-roll is missing/None ({broll_path}). Reusing valid video clip from another segment...")
+            valid_brolls = [b for b in broll_files if b and os.path.exists(b)]
+            if valid_brolls:
+                broll_path = valid_brolls[i % len(valid_brolls)]
+                print(f"[Assemble] Reused valid video clip: '{broll_path}' for segment {i}.")
+            else:
+                broll_path = f"output/emergency_broll_{i}.mp4"
+                print(f"[Assemble] Generating dynamic synthetic motion clip for segment {i}...")
                 cmd_synth = [
-                    "ffmpeg", "-y", "-f", "lavfi", "-i", f"color=c=0x0f172a:s={w}x{h}:d={duration:.3f}:r=30",
-                    "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
+                    "ffmpeg", "-y", "-f", "lavfi",
+                    "-i", f"cellauto=s={w}x{h}:r=30,format=pix_fmt=yuv420p",
+                    "-t", f"{duration:.3f}", "-c:v", "libx264", broll_path
                 ]
                 subprocess.run(cmd_synth, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 

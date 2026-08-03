@@ -62,6 +62,7 @@ def vision_rank_broll(
         f"   - Classroom lectures, teachers in front of blackboards/chalkboards, or presenters at desks/screens\n"
         f"   - Rear-view/backshots of people standing in front of boards, walls, or monitors\n"
         f"   - Generic office workers, handshakes, or people at computers\n"
+        f"   - Green screen mockups, chroma key backgrounds, people holding smartphones, phone screen scrolling, or commercial app ads\n"
         f"   - Abstract light effects, bokeh, or undefined particle animations\n"
         f"   - Any scene that does NOT show the actual physical subject (e.g. for space/science, it MUST show space/nebula/stars/scientific renders — NOT a human in a room)\n"
         f"5. Pick the highest-scoring candidate even when imperfect, so the pipeline can use the best available real video asset.\n"

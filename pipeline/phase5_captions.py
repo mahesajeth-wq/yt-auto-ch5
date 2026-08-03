@@ -157,37 +157,44 @@ def generate_captions(audio_files: list[str], script: dict, format_type: str = "
                     "end": (w_idx + 1) * word_dur
                 })
 
-        # Generate sliding window subtitles
+        # Generate non-colliding single/2-word ASS captions
+        last_end = 0.0
         for idx, word_info in enumerate(aligned_words):
             start = time_offset + word_info["start"]
             end = time_offset + word_info["end"]
 
-            start_win = max(0, idx - 1)
-            end_win = min(len(aligned_words), idx + 2)
+            # Clamp start so it never overlaps previous line's end timestamp (prevents libass vertical stacking collision)
+            if start < last_end:
+                start = last_end
+            if end <= start:
+                end = start + 0.25
 
-            word_dur_ms = int((word_info["end"] - word_info["start"]) * 1000)
+            # Set end to start of next word if next word starts earlier than current end
+            if idx + 1 < len(aligned_words):
+                next_start = time_offset + aligned_words[idx + 1]["start"]
+                if next_start > start:
+                    end = min(end, next_start)
+
+            last_end = end
+
+            word_dur_ms = int((end - start) * 1000)
             pop_end = min(70, max(20, int(word_dur_ms * 0.45)))
             settle_end = min(150, max(40, word_dur_ms))
 
-            styled_parts = []
-            for w_idx in range(start_win, end_win):
-                curr_word = aligned_words[w_idx]["word"]
-                curr_word_clean = curr_word.strip(".,!?\"'()").upper()
-                if w_idx == idx:
-                    if curr_word_clean in POWER_WORDS:
-                        styled_parts.append(
-                            f"{{\\fscx90\\fscy90\\t(0,{pop_end},1.2,\\fscx122\\fscy122)"
-                            f"\\t({pop_end},{settle_end},1,\\fscx100\\fscy100)\\c&H0033FF33&}}{curr_word.upper()}{{\\r}}"
-                        )
-                    else:
-                        styled_parts.append(
-                            f"{{\\fscx90\\fscy90\\t(0,{pop_end},1.2,\\fscx112\\fscy112)"
-                            f"\\t({pop_end},{settle_end},1,\\fscx100\\fscy100)\\c&H0000E5FF&}}{curr_word.upper()}{{\\r}}"
-                        )
-                else:
-                    styled_parts.append(f"{{\\c&HFFFFFF&}}{curr_word.upper()}{{\\r}}")
+            curr_word = word_info["word"]
+            curr_word_clean = curr_word.strip(".,!?\"'()").upper()
+            
+            if curr_word_clean in POWER_WORDS:
+                styled_text = (
+                    f"{{\\fscx90\\fscy90\\t(0,{pop_end},1.2,\\fscx122\\fscy122)"
+                    f"\\t({pop_end},{settle_end},1,\\fscx100\\fscy100)\\c&H0033FF33&}}{curr_word.upper()}{{\\r}}"
+                )
+            else:
+                styled_text = (
+                    f"{{\\fscx90\\fscy90\\t(0,{pop_end},1.2,\\fscx112\\fscy112)"
+                    f"\\t({pop_end},{settle_end},1,\\fscx100\\fscy100)\\c&H0000E5FF&}}{curr_word.upper()}{{\\r}}"
+                )
 
-            styled_text = " ".join(styled_parts)
             ass_events.append(f"Dialogue: 0,{fmt_time(start)},{fmt_time(end)},Default,,0,0,0,,{pos_tag}{styled_text}")
 
         time_offset += duration
