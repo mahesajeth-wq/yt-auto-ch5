@@ -2,6 +2,8 @@ name: Generate Short Video
 
 on:
   workflow_dispatch:
+  push:
+    branches: [ main ]
 
 permissions:
   contents: write             # needed to commit published_topics.json + voice_state.json
