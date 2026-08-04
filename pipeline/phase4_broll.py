@@ -161,27 +161,33 @@ def _pixabay_video(query: str) -> str | None:
 
 # ── Source 3: Coverr (cinematic, high quality) ───────────────────────────────
 
-def _coverr_video(query: str) -> str | None:
+def _extract_coverr_stream(item: dict) -> tuple[str | None, int, int]:
+    urls = item.get("urls", {})
+    if not isinstance(urls, dict) or not urls:
+        return None, 0, 0
+    is_vert = item.get("is_vertical", False)
+    w = item.get("max_width") or item.get("width") or (1080 if is_vert else 1920)
+    h = item.get("max_height") or item.get("height") or (1920 if is_vert else 1080)
+    for k in ["4k", "2160p", "1080p", "hd", "mp4_download", "mp4"]:
+        val = urls.get(k)
+        if isinstance(val, str) and val.startswith("http"):
+            return val, w, h
+        elif isinstance(val, dict):
+            for res_k in ["4k", "2160p", "1080p", "hd", "sd"]:
+                res_url = val.get(res_k)
+                if isinstance(res_url, str) and res_url.startswith("http"):
+                    return res_url, w, h
+    return None, 0, 0
+
+
+def _coverr_video(query: str, orientation: str = "landscape") -> str | None:
     if not COVERR_API_KEY:
         return None
     try:
-        r = requests.get(
-            "https://api.coverr.co/videos",
-            params={"keywords": query, "api_key": COVERR_API_KEY, "page": 1, "size": 5, "urls": "true"},
-            timeout=30,
-        )
-        r.raise_for_status()
-        hits = r.json().get("hits", [])
-        if not hits:
-            return None
-        item = random.choice(hits[:3])
-        urls = item.get("urls", {})
-        if not urls:
-            return None
-        video_url = urls.get("mp4_download") or urls.get("mp4")
-        if isinstance(video_url, dict):
-            video_url = video_url.get("hd") or video_url.get("sd")
-        return video_url
+        cands = _coverr_candidates(query, orientation=orientation, n=1)
+        if cands:
+            return cands[0]["video_url"]
+        return None
     except Exception as e:
         print(f"[B-roll] Coverr failed for '{query}': {e}")
         return None
@@ -191,9 +197,17 @@ def _coverr_candidates(query: str, orientation: str, n: int = 5) -> list[dict]:
     if not COVERR_API_KEY:
         return []
     try:
+        clean_q = _sanitize_broll_query(query)
         r = requests.get(
             "https://api.coverr.co/videos",
-            params={"keywords": query, "api_key": COVERR_API_KEY, "page": 1, "size": n * 3, "urls": "true"},
+            params={
+                "query": clean_q,
+                "api_key": COVERR_API_KEY,
+                "page": 0,
+                "size": min(40, max(n * 4, 15)),
+                "urls": "true",
+                "sort": "popular"
+            },
             timeout=30,
         )
         r.raise_for_status()
@@ -201,24 +215,23 @@ def _coverr_candidates(query: str, orientation: str, n: int = 5) -> list[dict]:
         candidates = []
         for item in hits:
             thumb = item.get("thumbnail")
-            urls = item.get("urls", {})
-            if urls:
-                video_url = urls.get("mp4_download") or urls.get("mp4")
-                if isinstance(video_url, dict):
-                    video_url = video_url.get("hd") or video_url.get("sd")
-                if thumb and video_url:
-                    is_vertical = item.get("is_vertical", False)
-                    candidates.append({
-                        "video_url": video_url,
-                        "thumb_url": thumb,
-                        "is_vertical": is_vertical,
-                        "source": "Coverr"
-                    })
-        # Sort candidates to prefer the requested orientation
-        if orientation == "portrait":
-            candidates.sort(key=lambda x: x["is_vertical"], reverse=True)
-        else:
-            candidates.sort(key=lambda x: x["is_vertical"], reverse=False)
+            video_url, width, height = _extract_coverr_stream(item)
+            if thumb and video_url:
+                is_vertical = item.get("is_vertical", False)
+                candidates.append({
+                    "video_url": video_url,
+                    "thumb_url": thumb,
+                    "is_vertical": is_vertical,
+                    "source": "Coverr",
+                    "title": item.get("title", query),
+                    "tags": item.get("tags", []),
+                    "width": width,
+                    "height": height,
+                    "duration": float(item.get("duration", 0.0))
+                })
+
+        is_port = (orientation == "portrait")
+        candidates.sort(key=lambda x: (x["is_vertical"] == is_port, x["width"]), reverse=True)
         return candidates[:n]
     except Exception as e:
         print(f"[B-roll] Coverr candidates search failed for '{query}': {e}")
