@@ -19,7 +19,10 @@ TARGET_TIMES = [dtime(12, 0, 0), dtime(19, 0, 0)]  # 12:00 PM & 7:00 PM IST
 def log(msg):
     ts = datetime.now(IST).strftime("%Y-%m-%d %H:%M:%S %Z")
     line = f"[{ts}] {msg}"
-    print(line, flush=True)
+    try:
+        print(line, flush=True)
+    except (BrokenPipeError, OSError):
+        pass
     with open(LOG_FILE, "a") as f:
         f.write(line + "\n")
 
@@ -63,10 +66,13 @@ def run_job(video_format="short", publish=True):
     env = os.environ.copy()
     warp_port = 40000
     if is_warp_available("127.0.0.1", warp_port):
-        proxy_str = f"socks5://127.0.0.1:{warp_port}"
+        proxy_str = f"socks5h://127.0.0.1:{warp_port}"
         env["HTTP_PROXY"] = proxy_str
         env["HTTPS_PROXY"] = proxy_str
         env["ALL_PROXY"] = proxy_str
+        env["http_proxy"] = proxy_str
+        env["https_proxy"] = proxy_str
+        env["all_proxy"] = proxy_str
         log(f"WARP SOCKS5 proxy active: {proxy_str}")
     else:
         log("WARP proxy inactive on port 40000; using direct local IP")
