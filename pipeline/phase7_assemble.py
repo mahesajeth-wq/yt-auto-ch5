@@ -74,11 +74,13 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
                 print(f"[Assemble] Reused valid video clip: '{broll_path}' for segment {i}.")
             else:
                 broll_path = f"output/emergency_broll_{i}.mp4"
-                print(f"[Assemble] Generating dynamic synthetic motion clip for segment {i}...")
+                print(f"[Assemble] Generating dynamic cinematic particle motion clip for segment {i}...")
                 cmd_synth = [
                     "ffmpeg", "-y", "-f", "lavfi",
-                    "-i", f"testsrc2=s={w}x{h}:r=30,eq=contrast=1.2:saturation=1.4,hue=s=1:h=t*35",
-                    "-t", f"{duration:.3f}", "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
+                    "-i", f"mandelbrot=s={w}x{h}:r=30:maxiter=120",
+                    "-t", f"{duration:.3f}",
+                    "-vf", "eq=contrast=1.15:saturation=1.4:gamma=0.9,hue=s=1:h=t*25,unsharp=5:5:0.8:5:5:0.4,setsar=1",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
                 ]
                 subprocess.run(cmd_synth, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 

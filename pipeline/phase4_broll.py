@@ -1108,19 +1108,39 @@ def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, dura
 # ── Fallback: Pollinations.ai (AI-generated, multiple models) ────────────────
 
 def _pollinations_image(query: str, w: int, h: int, img_path: str) -> bool:
-    """Returns True if image was downloaded successfully."""
-    encoded = urllib.parse.quote(query)
-    for model in ["flux", "flux-realism", "turbo"]:
+    """Returns True if cinematic stock image was downloaded successfully via Unsplash or Pollinations AI."""
+    clean_q = re.sub(r'[^a-zA-Z0-9\s]', '', query).strip()
+    words = [w for w in clean_q.split() if len(w) > 2]
+    topic_tag = "%20".join(words[:3]) if words else "nature"
+    
+    # 1. Try Unsplash Direct HD Image Endpoint
+    try:
+        unsplash_url = f"https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w={w}&h={h}&fit=crop"
+        # Or search endpoint
+        unsplash_search = f"https://source.unsplash.com/1080x1920/?{topic_tag}"
+        r = requests.get(unsplash_search, timeout=8, headers={"User-Agent": "Mozilla/5.0"}, allow_redirects=True)
+        if r.status_code == 200 and len(r.content) > 10_000:
+            with open(img_path, "wb") as f:
+                f.write(r.content)
+            print(f"[B-roll] Unsplash image download OK for query '{topic_tag}'.")
+            return True
+    except Exception as e:
+        print(f"[B-roll] Unsplash search failed: {e}")
+
+    # 2. Try Pollinations AI with clean prompt
+    encoded_prompt = urllib.parse.quote(f"4k cinematic documentary footage of {clean_q}, hyperrealistic, 8k, detailed, photorealistic, no text, no watermark")
+    for model in ["flux", "turbo"]:
         try:
             seed = random.randint(1, 100000)
             url = (
-                f"https://image.pollinations.ai/prompt/{encoded}"
+                f"https://image.pollinations.ai/prompt/{encoded_prompt}"
                 f"?width={w}&height={h}&model={model}&nologo=true&seed={seed}"
             )
-            r = requests.get(url, timeout=90)
-            if r.status_code == 200 and len(r.content) > 5000:
+            r = requests.get(url, timeout=12)
+            if r.status_code == 200 and len(r.content) > 10_000:
                 with open(img_path, "wb") as f:
                     f.write(r.content)
+                print(f"[B-roll] Pollinations {model} OK.")
                 return True
         except Exception as e:
             print(f"[B-roll] Pollinations {model} failed: {e}")
@@ -1939,14 +1959,22 @@ def _has_baked_text_ocr(frame_path: str) -> bool:
         except Exception as e:
             print(f"[B-roll] Image source failed: {e}. Trying Pollinations…")
 
-    # ── Fallback 3: Pollinations AI image ─────────────────────────────────────────────────
+    # ── Fallback 3: Pollinations AI / Unsplash 4K image ─────────────────────────────
     if _pollinations_image(query, w, h, img_path):
-        print(f"[B-roll] Segment {segment_index}: Pollinations OK. Applying Ken Burns…")
+        print(f"[B-roll] Segment {segment_index}: Stock image OK. Applying Ken Burns motion…")
         _image_to_ken_burns_video(img_path, out_path, w, h, duration, niche=channel, caption="")
         return out_path
 
-    # ── Fallback 4: PIL gradient placeholder ──────────────────────────────────────────────
-    print(f"[B-roll] Segment {segment_index}: all sources failed. Using gradient placeholder.")
-    _pil_placeholder(query, w, h, img_path)
+    # ── Fallback 4: Dynamic Cinematic Particle / Bokeh Motion Generator ─────────────
+    print(f"[B-roll] Segment {segment_index}: Generating cinematic procedural particle motion...")
+    cmd_procedural = [
+        "ffmpeg", "-y", "-f", "lavfi",
+        "-i", f"mandelbrot=s={w}x{h}:r=30:maxiter=120",
+        "-t", f"{duration:.3f}",
+        "-vf", "eq=contrast=1.15:saturation=1.4:gamma=0.9,hue=s=1:h=t*25,unsharp=5:5:0.8:5:5:0.4,setsar=1",
+        "-c:v", "libx264", "-pix_fmt", "yuv420p", out_path
+    ]
+    subprocess.run(cmd_procedural, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    return out_path
     _image_to_ken_burns_video(img_path, out_path, w, h, duration, niche=channel, caption="")
     return out_path
