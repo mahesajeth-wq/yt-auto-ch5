@@ -262,8 +262,8 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
         display_title = "\\n".join(title_lines)
         
         filters.append(f"drawtext=text='{display_title}':fontsize={title_fontsize}:fontcolor=yellow:font='{font_name}':"
-                       f"x=(w-text_w)/2:y=h*0.18:enable='between(t,0,1.5)':borderw=6:bordercolor=black:"
-                       f"line_spacing=8:box=1:boxcolor=black@0.5:boxborderw=12")
+                       f"x=(w-text_w)/2:y=h*0.18:enable='between(t,0,1.5)':shadowcolor=black@0.9:shadowx=4:shadowy=4:borderw=4:bordercolor=black:"
+                       f"line_spacing=8")
                        
         if len(durations) >= 4:
             seg4_start = sum(durations[:3])
@@ -272,7 +272,7 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
             filters.append(
                 f"drawtext=text='PAUSE - CATCH THE DETAIL':fontsize=48:fontcolor=yellow:font='{font_name}':"
                 f"x=(w-text_w)/2:y=h*0.15:enable='between(t,{seg4_start:.3f},{seg4_end:.3f})':"
-                f"box=1:boxcolor=black@0.6:boxborderw=10"
+                f"shadowcolor=black@0.9:shadowx=3:shadowy=3:borderw=3:bordercolor=black"
             )
             
         cmd = [
