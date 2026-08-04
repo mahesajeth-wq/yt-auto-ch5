@@ -871,14 +871,16 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
             end_time = start_time + 10.0 # download 10 seconds slice
             section_arg = f"*{start_time}-{end_time}"
             
-            # 3. Call yt-dlp CLI to download only the section
+            # 3. Call yt-dlp CLI with Android player client to bypass CI IP blocks
             cmd_dl = [
                 "yt-dlp",
                 "--download-sections", section_arg,
+                "--extractor-args", "youtube:player_client=android,web,mweb",
                 "--format", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
                 "--merge-output-format", "mp4",
-                "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "--user-agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36",
                 "--no-check-certificates",
+                "--retries", "3",
                 "--output", out_path,
                 url
             ]
