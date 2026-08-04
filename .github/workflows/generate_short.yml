@@ -3,8 +3,8 @@ name: Generate Short Video
 on:
   workflow_dispatch:
   schedule:
-    - cron: '10 7 * * *'
-    - cron: '10 14 * * *'
+    - cron: '30 6 * * *'
+    - cron: '30 13 * * *'
   push:
     branches: [ main ]
 
@@ -52,7 +52,7 @@ jobs:
             ${{ runner.os }}-whisper-
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: pip install -r requirements.txt && pip install -U --pre "yt-dlp[default]"
 
       - name: Generate Short
         timeout-minutes: 160
