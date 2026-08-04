@@ -74,15 +74,19 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
                 print(f"[Assemble] Reused valid video clip: '{broll_path}' for segment {i}.")
             else:
                 broll_path = f"output/emergency_broll_{i}.mp4"
-                print(f"[Assemble] Generating dynamic cinematic particle motion clip for segment {i}...")
-                cmd_synth = [
-                    "ffmpeg", "-y", "-f", "lavfi",
-                    "-i", f"mandelbrot=s={w}x{h}:r=30:maxiter=120",
-                    "-t", f"{duration:.3f}",
-                    "-vf", "eq=contrast=1.15:saturation=1.4:gamma=0.9,hue=s=1:h=t*25,unsharp=5:5:0.8:5:5:0.4,setsar=1",
-                    "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
-                ]
-                subprocess.run(cmd_synth, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                print(f"[Assemble] Generating clean Pollinations AI motion clip for segment {i}...")
+                prompt_clean = "breathtaking cinematic nature background 4k resolution photorealistic 60fps vertical"
+                from pipeline.phase4_broll import _pollinations_image, _image_to_ken_burns_video
+                synth_img = f"output/emergency_img_{i}.jpg"
+                if _pollinations_image(prompt_clean, synth_img, w=2160, h=3840):
+                    _image_to_ken_burns_video(synth_img, broll_path, w, h, duration=duration)
+                else:
+                    cmd_synth = [
+                        "ffmpeg", "-y", "-f", "lavfi",
+                        "-i", f"color=c=0x0a1128:s={w}x{h}:d={duration}",
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
+                    ]
+                    subprocess.run(cmd_synth, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         print(f"Normalizing segment {i} B-roll to duration {duration:.3f}s (offset: {ss_offset:.3f}s)...")
 
@@ -105,8 +109,8 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
                             })
                         clean_handle = re.sub(r"[^a-zA-Z0-9_@-]", "", str(handle))
                         clean_txt = f"Footage\\: {clean_handle}"
-                        drawtext_chain = f",drawtext=text='{clean_txt}':x=40:y=80:fontsize=24:fontcolor=white:box=1:boxcolor=black@0.6:boxborderw=6:enable='between(t,0,3.5)'"
-                        print(f"[Assemble] Burning on-screen attribution badge for segment {i}: {handle}")
+                        drawtext_chain = f",drawtext=text='{clean_txt}':x=40:y=80:fontsize=22:fontcolor=white:shadowcolor=black@0.8:shadowx=2:shadowy=2:enable='between(t,0,3.5)'"
+                        print(f"[Assemble] Burning clean on-screen attribution badge for segment {i}: {handle}")
             except Exception as cerr:
                 print(f"[Assemble] Warning: Could not parse credit file {credit_file}: {cerr}")
 
@@ -114,47 +118,42 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
         import random as _rnd
         motion_idx = _rnd.randint(0, 4)
         
-        is_hyperframes = broll_path and ("output/broll_" in broll_path or "/output/broll_" in broll_path)
-        
-        if is_hyperframes:
-            vf_chain = "setsar=1" + drawtext_chain
+        # Base scale-crop to cover full bleed with unsharp masking for enhanced clarity
+        if motion_idx == 0:
+            # 1. Slow Cinematic Diagonal Pan Up-Right
+            vf_chain = (
+                f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
+                f"crop={w}:{h}:'(in_w-out_w)/2 + (t-{duration}/2)*15':'(in_h-out_h)/2 + (t-{duration}/2)*15',"
+                f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
+            )
+        elif motion_idx == 1:
+            # 2. Slow Panning Upward
+            vf_chain = (
+                f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
+                f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2 + (t-{duration}/2)*22',"
+                f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
+            )
+        elif motion_idx == 2:
+            # 3. Slow Panning Downward
+            vf_chain = (
+                f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
+                f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2 - (t-{duration}/2)*22',"
+                f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
+            )
+        elif motion_idx == 3:
+            # 4. Slow Smooth Zoom In
+            vf_chain = (
+                f"scale=trunc({w}*(1+0.12*t/{duration})/2)*2:trunc({h}*(1+0.12*t/{duration})/2)*2:force_original_aspect_ratio=increase,"
+                f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2',"
+                f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
+            )
         else:
-            # Base scale-crop to cover full bleed with unsharp masking for enhanced clarity
-            if motion_idx == 0:
-                # 1. Slow Cinematic Diagonal Pan Up-Right
-                vf_chain = (
-                    f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
-                    f"crop={w}:{h}:'(in_w-out_w)/2 + (t-{duration}/2)*15':'(in_h-out_h)/2 + (t-{duration}/2)*15',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
-                )
-            elif motion_idx == 1:
-                # 2. Slow Panning Upward
-                vf_chain = (
-                    f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
-                    f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2 + (t-{duration}/2)*22',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
-                )
-            elif motion_idx == 2:
-                # 3. Slow Panning Downward
-                vf_chain = (
-                    f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
-                    f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2 - (t-{duration}/2)*22',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
-                )
-            elif motion_idx == 3:
-                # 4. Slow Panning Right
-                vf_chain = (
-                    f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
-                    f"crop={w}:{h}:'(in_w-out_w)/2 + (t-{duration}/2)*22':'(in_h-out_h)/2',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
-                )
-            else:
-                # 5. Slow Panning Left
-                vf_chain = (
-                    f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
-                    f"crop={w}:{h}:'(in_w-out_w)/2 - (t-{duration}/2)*22':'(in_h-out_h)/2',"
-                    f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
-                )
+            # 5. Slow Smooth Zoom Out
+            vf_chain = (
+                f"scale=trunc({w}*(1.15-0.12*t/{duration})/2)*2:trunc({h}*(1.15-0.12*t/{duration})/2)*2:force_original_aspect_ratio=increase,"
+                f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2',"
+                f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
+            )
             
         cmd = [
             "ffmpeg", "-y", "-ss", f"{ss_offset:.3f}", "-stream_loop", "-1", "-i", broll_path, "-t", f"{duration:.3f}",

@@ -1099,68 +1099,8 @@ def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, dura
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return
 
-    try:
-        if os.environ.get("DISABLE_HYPERFRAMES", "0") == "1":
-            raise RuntimeError("Hyperframes disabled via DISABLE_HYPERFRAMES")
-        import uuid
-        import shutil
-        
-        niche_map = {
-            "science": "science",
-            "nature": "nature",
-            "mystery": "nature",
-            "engineering": "engineering",
-            "business": "business",
-            "general": "general"
-        }
-        mapped_niche = niche_map.get(niche, "general")
-        
-        abs_img = os.path.abspath(img_path)
-        abs_out = os.path.abspath(out_path)
-        template_dir = os.path.abspath("pipeline/hyperframes_templates")
-        
-        # Copy input asset to template directory to avoid CORS/Same-Origin file:// loading blocks in Puppeteer/Chrome
-        temp_filename = f"temp_{uuid.uuid4().hex}{ext}"
-        temp_path = os.path.join(template_dir, temp_filename)
-        shutil.copy2(img_path, temp_path)
-        
-        variables = {
-            "imageUrl": temp_filename,
-            "duration": duration,
-            "niche": mapped_niche,
-            "caption": caption
-        }
-        
-        resolution = "portrait" if h > w else "landscape"
-        template_file = "index_portrait.html" if h > w else "index_landscape.html"
-        cmd = [
-            "npx", "-y", "hyperframes", "render", template_dir,
-            "-c", template_file,
-            "--output", abs_out,
-            "--resolution", resolution,
-            "--quality", "high",
-            "--variables", json.dumps(variables)
-        ]
-        
-        print(f"[B-roll] Rendering Hyperframes with niche={mapped_niche}...")
-        try:
-            res = subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            if res.returncode == 0 and os.path.exists(out_path) and os.path.getsize(out_path) > 10_000:
-                print(f"[B-roll] Hyperframes render successful: {out_path}")
-                return
-            else:
-                print("[B-roll] Hyperframes render failed or returned empty file. Falling back to FFmpeg.")
-        finally:
-            if os.path.exists(temp_path):
-                try:
-                    os.remove(temp_path)
-                except Exception:
-                    pass
-    except Exception as e:
-        if "Hyperframes disabled" in str(e):
-            print("[B-roll] Hyperframes disabled via DISABLE_HYPERFRAMES. Using FFmpeg directly.")
-        else:
-            print(f"[B-roll] Hyperframes execution error: {e}. Falling back to FFmpeg.")
+    # Force DISABLE_HYPERFRAMES to prevent tech HUD borders/grid overlays over B-roll clips
+    os.environ["DISABLE_HYPERFRAMES"] = "1"
 
     fps    = 60
     frames = int(duration * fps)
