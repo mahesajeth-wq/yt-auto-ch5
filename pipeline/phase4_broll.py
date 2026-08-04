@@ -1097,12 +1097,13 @@ def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, dura
         else:
             print(f"[B-roll] Hyperframes execution error: {e}. Falling back to FFmpeg.")
 
-    fps    = 30
+    fps    = 60
     frames = int(duration * fps)
 
     styles = [
         f"scale=8000:-1,zoompan=z='min(zoom+0.0015,1.5)':d={frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}",
-        f"scale=8000:-1,zoompan=z='min(zoom+0.0015,1.5)':d={frames}:x=0:y=0:s={w}x{h}:fps={fps}",
+        f"scale=8000:-1,zoompan=z='min(zoom+0.0015,1.5)':d={frames}:x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(on/d)':s={w}x{h}:fps={fps}",
+        f"scale=8000:-1,zoompan=z='min(zoom+0.0015,1.5)':d={frames}:x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(1-on/d)':s={w}x{h}:fps={fps}",
         f"scale=8000:-1,zoompan=z='min(zoom+0.001,1.3)':d={frames}:x='iw-iw/zoom':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}",
     ]
     vf = random.choice(styles)
@@ -1111,49 +1112,34 @@ def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, dura
         "ffmpeg", "-y", "-loop", "1", "-i", img_path,
         "-vf", f"{vf},setsar=1",
         "-t", str(duration), "-r", str(fps),
-        "-c:v", "libx264", "-preset", "fast", "-crf", "20", "-pix_fmt", "yuv420p",
+        "-c:v", "libx264", "-preset", "fast", "-crf", "18", "-pix_fmt", "yuv420p",
         "-an", out_path,
     ]
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 
 
-# ── Fallback: Pollinations.ai (AI-generated, multiple models) ────────────────
+# ── Fallback: Pollinations.ai (AI-generated, 4K resolution) ────────────────
 
 def _pollinations_image(query: str, w: int, h: int, img_path: str) -> bool:
-    """Returns True if cinematic stock image was downloaded successfully via Unsplash or Pollinations AI."""
+    """Returns True if 4K cinematic stock image was downloaded successfully via Pollinations AI."""
     clean_q = re.sub(r'[^a-zA-Z0-9\s]', '', query).strip()
-    words = [w for w in clean_q.split() if len(w) > 2]
-    topic_tag = "%20".join(words[:3]) if words else "nature"
     
-    # 1. Try Unsplash Direct HD Image Endpoint
-    try:
-        unsplash_url = f"https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w={w}&h={h}&fit=crop"
-        # Or search endpoint
-        unsplash_search = f"https://source.unsplash.com/1080x1920/?{topic_tag}"
-        r = requests.get(unsplash_search, timeout=8, headers={"User-Agent": "Mozilla/5.0"}, allow_redirects=True)
-        if r.status_code == 200 and len(r.content) > 10_000:
-            with open(img_path, "wb") as f:
-                f.write(r.content)
-            print(f"[B-roll] Unsplash image download OK for query '{topic_tag}'.")
-            return True
-    except Exception as e:
-        print(f"[B-roll] Unsplash search failed: {e}")
-
-    # 2. Try Pollinations AI with clean prompt
+    # Request 4K 2160x3840 for crisp Ken Burns panning
+    req_w, req_h = 2160, 3840
     encoded_prompt = urllib.parse.quote(f"4k cinematic documentary footage of {clean_q}, hyperrealistic, 8k, detailed, photorealistic, no text, no watermark")
     for model in ["flux", "turbo"]:
         try:
             seed = random.randint(1, 100000)
             url = (
                 f"https://image.pollinations.ai/prompt/{encoded_prompt}"
-                f"?width={w}&height={h}&model={model}&nologo=true&seed={seed}"
+                f"?width={req_w}&height={req_h}&model={model}&nologo=true&seed={seed}"
             )
             r = requests.get(url, timeout=12)
             if r.status_code == 200 and len(r.content) > 10_000:
                 with open(img_path, "wb") as f:
                     f.write(r.content)
-                print(f"[B-roll] Pollinations {model} OK.")
+                print(f"[B-roll] 4K Pollinations {model} image download OK.")
                 return True
         except Exception as e:
             print(f"[B-roll] Pollinations {model} failed: {e}")
