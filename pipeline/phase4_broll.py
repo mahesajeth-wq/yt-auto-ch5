@@ -1514,12 +1514,12 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
     candidates = []
 
     CHANNEL_SOURCE_PRIORITY = {
-        "science":     ["youtube", "nasa", "dvids", "wikimedia", "coverr", "archive", "pexels", "pixabay"],
-        "nature":      ["youtube", "pexels", "pixabay", "coverr", "wikimedia", "archive"],
-        "mystery":     ["youtube", "archive", "wikimedia", "coverr", "pexels", "pixabay"],
-        "engineering": ["youtube", "nasa", "dvids", "coverr", "wikimedia", "pexels", "archive"],
-        "business":    ["youtube", "coverr", "pexels", "pixabay", "klipy"],
-        "general":     ["youtube", "coverr", "pexels", "pixabay", "nasa", "wikimedia", "archive", "dvids"],
+        "science":     ["pexels", "coverr", "youtube", "nasa", "dvids", "wikimedia", "archive", "pixabay"],
+        "nature":      ["pexels", "coverr", "pixabay", "youtube", "wikimedia", "archive"],
+        "mystery":     ["pexels", "coverr", "youtube", "archive", "wikimedia", "pixabay"],
+        "engineering": ["pexels", "coverr", "youtube", "nasa", "dvids", "wikimedia", "archive"],
+        "business":    ["pexels", "coverr", "youtube", "pixabay", "klipy"],
+        "general":     ["pexels", "coverr", "youtube", "pixabay", "nasa", "wikimedia", "archive", "dvids"],
     }
 
     def run_source_query(source: str, q: str) -> list[dict]:
