@@ -45,12 +45,10 @@ def upload_file_to_gemini(filepath: str, api_key: str) -> dict:
         "X-Goog-Upload-Header-Content-Type": mime_type,
     }
     
-    with open(filepath, "rb") as f:
-        file_bytes = f.read()
-        
     for attempt in range(4):
         try:
-            response = requests.post(url, headers=headers, data=file_bytes, timeout=300)
+            with open(filepath, "rb") as f:
+                response = requests.post(url, headers=headers, data=f, timeout=300)
             if response.status_code == 429:
                 from pipeline.gemini import _is_daily_quota_exhausted
                 if _is_daily_quota_exhausted(response):

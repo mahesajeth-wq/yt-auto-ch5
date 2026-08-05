@@ -778,6 +778,11 @@ def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
         'quiet': True,
         'extract_flat': True,
         'force_generic_extractor': False,
+        'extractor_args': {
+            'youtube': {
+                'player_client': ['android', 'ios', 'mweb', 'tv', 'android_vr', 'web_creator']
+            }
+        }
     }
     
     for sq in search_queries:
@@ -1108,10 +1113,10 @@ def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, dura
     frames = int(duration * fps)
 
     styles = [
-        f"scale=8000:-1,zoompan=z='min(zoom+0.0015,1.5)':d={frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}",
-        f"scale=8000:-1,zoompan=z='min(zoom+0.0015,1.5)':d={frames}:x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(on/d)':s={w}x{h}:fps={fps}",
-        f"scale=8000:-1,zoompan=z='min(zoom+0.0015,1.5)':d={frames}:x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(1-on/d)':s={w}x{h}:fps={fps}",
-        f"scale=8000:-1,zoompan=z='min(zoom+0.001,1.3)':d={frames}:x='iw-iw/zoom':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}",
+        f"scale=3840:-1,zoompan=z='min(zoom+0.0015,1.5)':d={frames}:x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}",
+        f"scale=3840:-1,zoompan=z='min(zoom+0.0015,1.5)':d={frames}:x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(on/d)':s={w}x{h}:fps={fps}",
+        f"scale=3840:-1,zoompan=z='min(zoom+0.0015,1.5)':d={frames}:x='iw/2-(iw/zoom/2)':y='(ih-ih/zoom)*(1-on/d)':s={w}x{h}:fps={fps}",
+        f"scale=3840:-1,zoompan=z='min(zoom+0.001,1.3)':d={frames}:x='iw-iw/zoom':y='ih/2-(ih/zoom/2)':s={w}x{h}:fps={fps}",
     ]
     vf = random.choice(styles)
 

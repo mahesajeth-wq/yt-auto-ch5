@@ -33,15 +33,16 @@ jobs:
           python-version: '3.11'
           cache: 'pip'
 
-      - name: Install FFmpeg
-        run: sudo apt-get install -y --no-install-recommends ffmpeg
+      - name: Install System Dependencies (FFmpeg, Tesseract OCR, Fonts)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends ffmpeg tesseract-ocr tesseract-ocr-eng fonts-dejavu-core fonts-liberation
 
       - name: Install Bebas Neue Font
         run: |
           sudo mkdir -p /usr/local/share/fonts
           sudo wget -O /usr/local/share/fonts/BebasNeue-Regular.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/bebasneue/BebasNeue-Regular.ttf
           sudo fc-cache -fv
-
 
       - name: Cache faster-whisper models
         uses: actions/cache@v4
@@ -70,6 +71,8 @@ jobs:
           GEMINI_JUDGE_API_KEY: ${{ secrets.GEMINI_JUDGE_API_KEY }}
           FREESOUND_API_KEY: ${{ secrets.FREESOUND_API_KEY }}
           BYPASS_VISION_MATCH: "0"
+          DISABLE_HYPERFRAMES: "1"
+          CHANNEL_NICHE: "science"
         run: |
           for attempt in 1 2; do
             echo "Generate attempt ${attempt}/2"
@@ -77,7 +80,7 @@ jobs:
             if [ "$attempt" -gt 1 ] && [ -d output ]; then
               resume_arg="--resume"
             fi
-            timeout 65m python run_generate.py --format short $resume_arg && exit 0
+            timeout 15m python run_generate.py --format short $resume_arg && exit 0
             code=$?
             if [ "$code" -eq 124 ]; then
               echo "Generate attempt ${attempt} timed out"
@@ -85,8 +88,8 @@ jobs:
               echo "Generate attempt ${attempt} failed with exit ${code}"
             fi
             if [ "$attempt" -eq 1 ]; then
-              echo "Waiting 16 minutes before retry to let free API cooldowns clear"
-              sleep 960
+              echo "Waiting 60s before retry"
+              sleep 60
             fi
           done
           exit 1
