@@ -1133,7 +1133,7 @@ def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, dura
 
 # ── Fallback: Pollinations.ai (AI-generated, 4K resolution) ────────────────
 
-def _pollinations_image(query: str, w: int, h: int, img_path: str) -> bool:
+def _pollinations_image(query: str, img_path: str, w: int = 2160, h: int = 3840) -> bool:
     """Returns True if 4K cinematic stock image was downloaded successfully via Pollinations AI."""
     clean_q = re.sub(r'[^a-zA-Z0-9\s]', '', query).strip()
     
@@ -1971,7 +1971,7 @@ def _has_baked_text_ocr(frame_path: str) -> bool:
             print(f"[B-roll] Image source failed: {e}. Trying Pollinations…")
 
     # ── Fallback 3: Pollinations AI / Unsplash 4K image ─────────────────────────────
-    if _pollinations_image(query, w, h, img_path):
+    if _pollinations_image(query, img_path, w, h):
         print(f"[B-roll] Segment {segment_index}: Stock image OK. Applying Ken Burns motion…")
         _image_to_ken_burns_video(img_path, out_path, w, h, duration, niche=channel, caption="")
         return out_path
@@ -1980,7 +1980,7 @@ def _has_baked_text_ocr(frame_path: str) -> bool:
     print(f"[B-roll] Segment {segment_index}: Generating unique Pollinations AI motion clip...")
     narration_query = narration or query
     clean_prompt = f"4k cinematic documentary footage of {narration_query}, photorealistic, 8k, detailed, no text, no watermark"
-    if _pollinations_image(clean_prompt, w, h, img_path):
+    if _pollinations_image(clean_prompt, img_path, w, h):
         _image_to_ken_burns_video(img_path, out_path, w, h, duration, niche=channel, caption="")
         return out_path
 
