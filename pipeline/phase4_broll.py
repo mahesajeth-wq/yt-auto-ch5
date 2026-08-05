@@ -1971,16 +1971,18 @@ def _has_baked_text_ocr(frame_path: str) -> bool:
         _image_to_ken_burns_video(img_path, out_path, w, h, duration, niche=channel, caption="")
         return out_path
 
-    # ── Fallback 4: Dynamic Cinematic Particle / Bokeh Motion Generator ─────────────
-    print(f"[B-roll] Segment {segment_index}: Generating cinematic procedural particle motion...")
+    # ── Fallback 4: Unique Pollinations 4K Photorealistic Motion Clip ─────────────────
+    print(f"[B-roll] Segment {segment_index}: Generating unique Pollinations AI motion clip...")
+    narration_query = narration or query
+    clean_prompt = f"4k cinematic documentary footage of {narration_query}, photorealistic, 8k, detailed, no text, no watermark"
+    if _pollinations_image(clean_prompt, w, h, img_path):
+        _image_to_ken_burns_video(img_path, out_path, w, h, duration, niche=channel, caption="")
+        return out_path
+
     cmd_procedural = [
         "ffmpeg", "-y", "-f", "lavfi",
-        "-i", f"mandelbrot=s={w}x{h}:r=30:maxiter=120",
-        "-t", f"{duration:.3f}",
-        "-vf", "eq=contrast=1.15:saturation=1.4:gamma=0.9,hue=s=1:h=t*25,unsharp=5:5:0.8:5:5:0.4,setsar=1",
+        "-i", f"color=c=0x0b1326:s={w}x{h}:d={duration}",
         "-c:v", "libx264", "-pix_fmt", "yuv420p", out_path
     ]
     subprocess.run(cmd_procedural, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    return out_path
-    _image_to_ken_burns_video(img_path, out_path, w, h, duration, niche=channel, caption="")
     return out_path

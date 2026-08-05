@@ -65,28 +65,24 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
         ss_offset = ss_offsets[i]
         norm_path = f"output/broll_{i}_norm.mp4"
         
-        # Handle missing/None broll_path gracefully by reusing valid video clips from other segments
-        if not broll_path or not os.path.exists(broll_path):
-            print(f"[Assemble] Warning: Segment {i} B-roll is missing/None ({broll_path}). Reusing valid video clip from another segment...")
-            valid_brolls = [b for b in broll_files if b and os.path.exists(b)]
-            if valid_brolls:
-                broll_path = valid_brolls[i % len(valid_brolls)]
-                print(f"[Assemble] Reused valid video clip: '{broll_path}' for segment {i}.")
+        # Handle missing/None broll_path by generating a unique 4K Pollinations AI motion clip for this specific segment
+        if not broll_path or not os.path.exists(broll_path) or os.path.getsize(broll_path) < 10_000:
+            broll_path = f"output/emergency_broll_{i}.mp4"
+            print(f"[Assemble] Missing/invalid B-roll for segment {i}. Generating unique 4K Pollinations AI motion clip...")
+            seg_info = script.get("segments", [])[i] if script and i < len(script.get("segments", [])) else {}
+            seg_query = seg_info.get("broll_query") or seg_info.get("narration") or "cinematic nature background 4k"
+            prompt_clean = f"4k cinematic documentary footage of {seg_query}, photorealistic, 8k, detailed, no text, no watermark"
+            from pipeline.phase4_broll import _pollinations_image, _image_to_ken_burns_video
+            synth_img = f"output/emergency_img_{i}.jpg"
+            if _pollinations_image(prompt_clean, synth_img, w=2160, h=3840):
+                _image_to_ken_burns_video(synth_img, broll_path, w, h, duration=duration)
             else:
-                broll_path = f"output/emergency_broll_{i}.mp4"
-                print(f"[Assemble] Generating clean Pollinations AI motion clip for segment {i}...")
-                prompt_clean = "breathtaking cinematic nature background 4k resolution photorealistic 60fps vertical"
-                from pipeline.phase4_broll import _pollinations_image, _image_to_ken_burns_video
-                synth_img = f"output/emergency_img_{i}.jpg"
-                if _pollinations_image(prompt_clean, synth_img, w=2160, h=3840):
-                    _image_to_ken_burns_video(synth_img, broll_path, w, h, duration=duration)
-                else:
-                    cmd_synth = [
-                        "ffmpeg", "-y", "-f", "lavfi",
-                        "-i", f"color=c=0x0a1128:s={w}x{h}:d={duration}",
-                        "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
-                    ]
-                    subprocess.run(cmd_synth, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                cmd_synth = [
+                    "ffmpeg", "-y", "-f", "lavfi",
+                    "-i", f"color=c=0x0a1128:s={w}x{h}:d={duration}",
+                    "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
+                ]
+                subprocess.run(cmd_synth, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         print(f"Normalizing segment {i} B-roll to duration {duration:.3f}s (offset: {ss_offset:.3f}s)...")
 
