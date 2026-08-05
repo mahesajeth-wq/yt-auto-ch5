@@ -141,17 +141,17 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
                 f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
             )
         elif motion_idx == 3:
-            # 4. Slow Smooth Zoom In
+            # 4. Slow Panning Right
             vf_chain = (
-                f"scale=trunc({w}*(1+0.12*t/{duration})/2)*2:trunc({h}*(1+0.12*t/{duration})/2)*2:force_original_aspect_ratio=increase,"
-                f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2',"
+                f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
+                f"crop={w}:{h}:'(in_w-out_w)/2 + (t-{duration}/2)*22':'(in_h-out_h)/2',"
                 f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
             )
         else:
-            # 5. Slow Smooth Zoom Out
+            # 5. Slow Panning Left
             vf_chain = (
-                f"scale=trunc({w}*(1.15-0.12*t/{duration})/2)*2:trunc({h}*(1.15-0.12*t/{duration})/2)*2:force_original_aspect_ratio=increase,"
-                f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2',"
+                f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
+                f"crop={w}:{h}:'(in_w-out_w)/2 - (t-{duration}/2)*22':'(in_h-out_h)/2',"
                 f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
             )
             
@@ -257,21 +257,23 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
             title_lines.append(current_line)
         
         # Use smaller font if title is multi-line
-        title_fontsize = 68 if len(title_lines) <= 1 else 52
-        # FFmpeg drawtext uses \n for newlines
-        display_title = "\\n".join(title_lines)
-        
-        filters.append(f"drawtext=text='{display_title}':fontsize={title_fontsize}:fontcolor=yellow:font='{font_name}':"
-                       f"x=(w-text_w)/2:y=h*0.18:enable='between(t,0,1.5)':shadowcolor=black@0.9:shadowx=4:shadowy=4:borderw=4:bordercolor=black:"
-                       f"line_spacing=8")
+        title_fontsize = 64 if len(title_lines) <= 1 else 50
+        y_start = 0.16
+        for t_idx, line in enumerate(title_lines):
+            clean_l = line.replace("'", "").replace(":", "\\:").strip()
+            y_pos = f"h*{y_start + t_idx * 0.06:.2f}"
+            filters.append(
+                f"drawtext=text='{clean_l}':fontsize={title_fontsize}:fontcolor=yellow:font='{font_name}':"
+                f"x=(w-text_w)/2:y={y_pos}:enable='between(t,0,1.8)':shadowcolor=black@0.9:shadowx=4:shadowy=4:borderw=4:bordercolor=black"
+            )
                        
         if len(durations) >= 4:
             seg4_start = sum(durations[:3])
             seg4_end = seg4_start + 0.8
-            # 3. Rewatch trigger
+            # 3. Rewatch trigger positioned cleanly at lower third
             filters.append(
-                f"drawtext=text='PAUSE - CATCH THE DETAIL':fontsize=48:fontcolor=yellow:font='{font_name}':"
-                f"x=(w-text_w)/2:y=h*0.15:enable='between(t,{seg4_start:.3f},{seg4_end:.3f})':"
+                f"drawtext=text='PAUSE - CATCH THE DETAIL':fontsize=42:fontcolor=yellow:font='{font_name}':"
+                f"x=(w-text_w)/2:y=h*0.82:enable='between(t,{seg4_start:.3f},{seg4_end:.3f})':"
                 f"shadowcolor=black@0.9:shadowx=3:shadowy=3:borderw=3:bordercolor=black"
             )
             

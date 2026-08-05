@@ -1,5 +1,24 @@
 import os
 
+# Auto-load local_env.sh if present to populate environment variables
+def _autoload_local_env():
+    for env_path in ["local_env.sh", "../local_env.sh", "/root/yt-auto/local_env.sh", "/root/local_env.sh"]:
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line.startswith("export ") and "=" in line:
+                            k, v = line[7:].split("=", 1)
+                            k = k.strip()
+                            v = v.strip().strip('"').strip("'")
+                            if k and k not in os.environ and v:
+                                os.environ[k] = v
+            except Exception:
+                pass
+
+_autoload_local_env()
+
 # ── Gemini Key Pool ──────────────────────────────────────────────────────────
 # GEMINI_API_KEYS = comma-separated list (e.g. "key1,key2,key3")
 # Multiple keys from DIFFERENT Google accounts give truly separate quotas.
@@ -50,14 +69,14 @@ FPS                 = 30
 TOPIC_LOG_SIZE      = 90
 
 HOOK_PATTERNS = [
-    "The {topic} detail that cost a company billions",
-    "Everyone thinks {topic} was an accident. It wasn't.",
-    "This single {topic} mistake changed business history",
-    "How {topic} secretly built an empire while no one looked",
-    "The 100-year-old {topic} strategy still used today",
-    "Why {topic} failed despite having everything",
-    "The untold story behind {topic} and its collapse",
-    "How a seemingly perfect {topic} went terribly wrong",
+    "The {topic} fact that breaks a rule you learned in school",
+    "In exactly 30 seconds you'll never see {topic} the same way",
+    "Scientists found something inside {topic} that shouldn't exist",
+    "The {topic} detail that 99% of people never notice — even experts",
+    "What {topic} does when no one is watching will disturb you",
+    "The one thing about {topic} that every textbook gets wrong",
+    "This single {topic} fact overturns 100 years of assumptions",
+    "You've seen {topic} your whole life. You've never actually seen it.",
 ]
 
 # 4 layout variants — rotated per video to avoid similarity-score flagging
@@ -68,20 +87,14 @@ THUMBNAIL_LAYOUTS = [
     "split_left",         # dark left panel with text, right panel shows frame
 ]
 
-# topic sub-cluster rotation for Business & Economic History channel
-BUSINESS_HISTORY_SUBCLUSTERS = [
-    "Vintage Advertising History and 1950s campaigns",
-    "Corporate Collapses, Scandals, and massive frauds",
-    "Business Empires, Monopolies, and industry titans",
-    "Founder Rivalries, Feuds, and brand wars",
-    "Product Failures and Billion-Dollar Mistakes",
-    "Industrial and Manufacturing History of iconic products",
-    "Tech Company Case Studies and modern business models",
-    "Economic Crashes, Panics, and market bubbles",
-    "Startup Failures and evaporated valuations",
+# topic sub-cluster rotation for Science and Technology channel
+SCIENCE_SUBCLUSTERS = [
+    "space exploration and astrophysics",
+    "physics and quantum mechanics mysteries",
+    "advanced chemistry and materials science",
+    "biotechnology and genetic engineering",
+    "future technology and computing breakthroughs",
 ]
-TOPIC_SUBCLUSTERS = BUSINESS_HISTORY_SUBCLUSTERS
-SCIENCE_SUBCLUSTERS = BUSINESS_HISTORY_SUBCLUSTERS
 
 YT_CATEGORY_EDUCATION = "27"
 YT_CATEGORY_SCIENCE   = "28"
@@ -116,4 +129,4 @@ def validate_config():
 
 
 # ── Social / Beacons Link ───────────────────────────────────────────────────
-BEACONS_LINK = os.environ.get("BEACONS_LINK", "https://beacons.ai/mindherebusiness")
+BEACONS_LINK = os.environ.get("BEACONS_LINK", "https://beacons.ai/edu_fun")

@@ -811,7 +811,9 @@ def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
                         "istock", "download", "text", "subtitles", "slides", "powerpoint", "explainer", "overview",
                         "infographic", "diagram", "illustration", "chart", "diagrams", "still", "figure", "textbook",
                         "green screen", "chroma key", "greenscreen", "smartphone", "holding phone", "phone screen",
-                        "mobile screen", "scrolling", "mockup", "vertical smartphone", "mobile phone", "app review"
+                        "mobile screen", "scrolling", "mockup", "vertical smartphone", "mobile phone", "app review",
+                        "case", "phone case", "galaxy case", "iphone case", "unboxing", "review", "accessory", "accessories",
+                        "cover", "screen protector", "buy", "store", "price", "aliexpress", "amazon", "ebay", "shopping"
                     ]
                     if any(bad in title_lower for bad in bad_title_keywords):
                         print(f"[B-roll] Skipping text/explainer/classroom/greenscreen candidate: '{title}'")
