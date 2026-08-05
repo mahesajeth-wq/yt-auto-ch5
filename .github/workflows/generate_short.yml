@@ -80,7 +80,7 @@ jobs:
             if [ "$attempt" -gt 1 ] && [ -d output ]; then
               resume_arg="--resume"
             fi
-            timeout 15m python run_generate.py --format short $resume_arg && exit 0
+            timeout 25m python run_generate.py --format short $resume_arg && exit 0
             code=$?
             if [ "$code" -eq 124 ]; then
               echo "Generate attempt ${attempt} timed out"
