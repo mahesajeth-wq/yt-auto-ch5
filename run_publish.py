@@ -117,17 +117,23 @@ def main():
     print("\n🚀 Starting platform uploads...")
     
     # 1. YouTube Upload
+    yt_success = False
     try:
         print("\n📺 Initiating YouTube upload...")
         video_id = phase9.upload_to_youtube(video_path, thumbnail_path, metadata)
         print(f"✅ Successfully published to YouTube! Video ID: {video_id}")
         print(f"Direct Link: https://www.youtube.com/watch?v={video_id}")
+        yt_success = True
     except google.auth.exceptions.RefreshError as ref_err:
         print("\n⚠️ YouTube Authentication Error: Refresh token may have expired or is invalid.")
         print("Re-generate your refresh token at: https://developers.google.com/oauthplayground")
         print(f"Details: {ref_err}")
     except Exception as e:
         print(f"⚠️ YouTube upload failed with error: {e}")
+        
+    if not yt_success:
+        print("❌ YouTube upload failed. Exiting with status 1 to trigger GHA retry.")
+        sys.exit(1)
         
     # 2. Dailymotion Upload
     try:

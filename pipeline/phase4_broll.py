@@ -923,22 +923,18 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
             
             # 4. Fallback: Invidious Local Proxy Stream Extractor (local=true) if yt-dlp is blocked
             if not success:
-                print("[B-roll] yt-dlp clients failed/blocked. Attempting Invidious local=true stream proxy...")
                 try:
-                    # Extract video ID from URL
                     vid_match = re.search(r'(?:v=|\/)([a-zA-Z0-9_-]{11})', url)
                     if vid_match:
                         vid_id = vid_match.group(1)
                         inv_nodes = [
-                            "https://invidious.privacydev.net",
                             "https://inv.tux.pizza",
-                            "https://invidious.nerdvpn.de",
                             "https://invidious.drgns.space"
                         ]
                         for node in inv_nodes:
                             try:
                                 api_url = f"{node}/api/v1/videos/{vid_id}"
-                                r_inv = requests.get(api_url, timeout=5)
+                                r_inv = requests.get(api_url, timeout=1.5)
                                 if r_inv.status_code == 200:
                                     inv_data = r_inv.json()
                                     formats = inv_data.get("formatStreams", [])
@@ -947,14 +943,13 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
                                         itag = mp4_fmt[0].get("itag", 18)
                                         stream_url = f"{node}/latest_version?id={vid_id}&itag={itag}&local=true"
                                         temp_full = out_path + ".full.mp4"
-                                        with requests.get(stream_url, stream=True, timeout=20) as st_res:
+                                        with requests.get(stream_url, stream=True, timeout=8) as st_res:
                                             if st_res.status_code == 200:
                                                 with open(temp_full, "wb") as f_out:
                                                     for chunk in st_res.iter_content(chunk_size=16384):
                                                         if chunk:
                                                             f_out.write(chunk)
                                                 if os.path.exists(temp_full) and os.path.getsize(temp_full) > 50_000:
-                                                    # Slice 10s video segment with ffmpeg
                                                     cmd_slice = [
                                                         "ffmpeg", "-y", "-ss", str(start_time),
                                                         "-i", temp_full, "-t", "10",
@@ -968,10 +963,10 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
                                                         print(f"[B-roll] Invidious proxy stream slice download SUCCESS from node {node}!")
                                                         success = True
                                                         break
-                            except Exception as e_node:
-                                print(f"[B-roll] Invidious node {node} error: {e_node}")
-                except Exception as e_inv:
-                    print(f"[B-roll] Invidious fallback error: {e_inv}")
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
             if not success:
                 for alt_ext in [".mp4", ".webm", ".mkv"]:
                     candidate_file = out_path + alt_ext
@@ -1109,7 +1104,7 @@ def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, dura
     # Force DISABLE_HYPERFRAMES to prevent tech HUD borders/grid overlays over B-roll clips
     os.environ["DISABLE_HYPERFRAMES"] = "1"
 
-    fps    = 60
+    fps    = 30
     frames = int(duration * fps)
 
     styles = [
