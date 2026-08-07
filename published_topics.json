@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How negative refractive index metamaterials actually work, bending light in the 'wrong' direction to make objects appear closer or even invisible.",
     "How **CRISPR-Cas surveillance systems** can detect diseases with single-molecule precision, turning a gene-editing tool into a diagnostic powerhouse.",
     "Topological qubits achieve enhanced fault tolerance through 'braiding' Majorana zero modes, offering inherent error resistance for quantum computing.",
     "How **Hubble's Law** means the expansion of space can make galaxies permanently unreachable, even if we traveled at light speed.",
@@ -89,8 +88,9 @@
     "AI-Designed Viruses: A New Frontier in Biological Engineering as AI Creates Functional Phages",
     "South Korea's Danuri orbiter captures first images of a SpaceX rocket's impact crater on the moon, offering unique insights into lunar surface mechanics and the effects of human-made space debris.",
     "How dark energy expands the observable universe cosmos #453",
-    "How cell-inspired nanoreactors efficiently convert sunlight into hydrogen peroxide, mimicking biological processes for cleaner chemical manufacturing."
+    "How cell-inspired nanoreactors efficiently convert sunlight into hydrogen peroxide, mimicking biological processes for cleaner chemical manufacturing.",
+    "How dark energy expands the observable universe cosmos #497"
   ],
-  "subcluster_idx": 3,
-  "call_count": 97
+  "subcluster_idx": 4,
+  "call_count": 98
 }
