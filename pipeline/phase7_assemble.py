@@ -254,7 +254,7 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
     assembled_capped_path = "output/assembled_capped.mp4"
     cmd = [
         "ffmpeg", "-y", "-i", assembled_video_path,
-        "-vf", f"ass={captions_ass}",
+        "-vf", f"ass='{captions_ass}'",
         "-c:v", "libx264", "-preset", "superfast", "-crf", "18", "-pix_fmt", "yuv420p",
         assembled_capped_path
     ]
@@ -363,9 +363,8 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
         "-map", "0:v",
         "-map", "[audio_final]",
         "-c:v", "copy",
-        "-pix_fmt", "yuv420p",
         "-c:a", "aac", "-b:a", "192k", "-ar", "48000",
-        "-r", "30", "-movflags", "+faststart",
+        "-shortest", "-movflags", "+faststart",
         final_output_path,
     ]
     subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

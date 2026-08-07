@@ -824,11 +824,11 @@ def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
                     
                     video_id = entry.get('id')
                     if not video_id and url:
-                        m_id = re.search(r'(?:v=|\/)([^&\n?#]+)', url)
+                        m_id = re.search(r'(?:v=|\/shorts\/|\/embed\/|\/)([a-zA-Z0-9_-]{11})', url)
                         if m_id:
                             video_id = m_id.group(1)
                     
-                    if not video_id:
+                    if not video_id or len(video_id) != 11 or video_id == "shorts":
                         continue
                         
                     full_url = f"https://www.youtube.com/watch?v={video_id}"
@@ -872,22 +872,33 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
             duration_secs = 0.0
             info = {}
             try:
-                cmd_info = ["yt-dlp", "--dump-json", "--no-check-certificates", url]
+                cmd_info = [
+                    "yt-dlp",
+                    "--dump-json",
+                    "--extractor-args", "youtube:player_client=android",
+                    "--user-agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36",
+                    "--no-check-certificates",
+                    url
+                ]
                 res_info = subprocess.run(cmd_info, capture_output=True, text=True, check=True)
                 info = json.loads(res_info.stdout)
                 duration_secs = float(info.get("duration", 0.0))
             except Exception as e:
                 print(f"[B-roll] Warning: Could not retrieve video duration: {e}")
             
-            # 2. Pick a safe start time to skip intro card/logos
-            start_time = 20.0
-            if duration_secs > 0.0 and duration_secs <= 25.0:
-                start_time = 2.0
-            if duration_secs > 0.0 and duration_secs <= 5.0:
+            # 2. Pick a safe start time to skip intro card/logos and stay within EOF bounds
+            start_time = 2.0
+            if duration_secs > 35.0:
+                start_time = 15.0
+            if duration_secs > 0.0 and duration_secs <= 10.0:
                 start_time = 0.0
                 
-            end_time = start_time + 10.0 # download 10 seconds slice
-            section_arg = f"*{start_time}-{end_time}"
+            end_time = start_time + 10.0
+            if duration_secs > 0.0 and end_time > duration_secs:
+                end_time = duration_secs
+                start_time = max(0.0, end_time - 10.0)
+                
+            section_arg = f"*{start_time:.1f}-{end_time:.1f}"
             
             # 3. Try multiple client extractors (android -> ios -> mweb -> tv) in waterfall loop
             clients_to_try = [
