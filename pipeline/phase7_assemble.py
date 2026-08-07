@@ -78,7 +78,10 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
             if PEXELS_API_KEY:
                 try:
                     import urllib.request
-                    headers = {"Authorization": PEXELS_API_KEY}
+                    headers = {
+                        "Authorization": PEXELS_API_KEY,
+                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+                    }
                     req = urllib.request.Request(
                         f"https://api.pexels.com/videos/search?query={urllib.parse.quote(seg_query)}&per_page=5&orientation=portrait",
                         headers=headers
@@ -93,7 +96,9 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
                                 video_link = best_file.get("link")
                                 if video_link:
                                     temp_vid = f"output/pexels_temp_{i}.mp4"
-                                    urllib.request.urlretrieve(video_link, temp_vid)
+                                    req_vid = urllib.request.Request(video_link, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"})
+                                    with urllib.request.urlopen(req_vid, timeout=15) as vresp, open(temp_vid, "wb") as out_f:
+                                        out_f.write(vresp.read())
                                     if os.path.exists(temp_vid) and os.path.getsize(temp_vid) > 20_000:
                                         broll_path = temp_vid
                                         pexels_success = True
@@ -110,11 +115,11 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
                 if _pollinations_image(prompt_clean, synth_img, w=2160, h=3840):
                     _image_to_ken_burns_video(synth_img, broll_path, w, h, duration=duration)
                 else:
-                    # High quality procedural animation (plasma/mandelbrot/ambient motion)
+                    # High quality procedural mandelbrot animation
                     cmd_synth = [
                         "ffmpeg", "-y", "-f", "lavfi",
-                        "-i", f"plasma=s={w}x{h}:d={duration}",
-                        "-vf", "eq=contrast=1.2:saturation=1.5,hue=s=0.5",
+                        "-i", f"mandelbrot=s={w}x{h}:r=30",
+                        "-t", str(duration),
                         "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
                     ]
                     subprocess.run(cmd_synth, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
