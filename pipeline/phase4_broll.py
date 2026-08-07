@@ -775,11 +775,18 @@ def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
     
     candidates = []
     seen_urls = set()
-    search_queries = [f"{query} footage", query, f"{query} 4k"]
+    search_queries = [
+        f"{query} documentary footage",
+        f"{query} real footage 4k",
+        f"{query} cinematic b-roll",
+        f"{query} archive",
+        query
+    ]
     
     ydl_opts = {
         'quiet': True,
         'extract_flat': True,
+        'nocheckcertificate': True,
         'force_generic_extractor': False,
         'extractor_args': {
             'youtube': {
@@ -1422,8 +1429,8 @@ def _score_candidate(item: dict, query: str, target_duration: float = 8.0) -> fl
         dur_score = max(0.0, 20.0 - 2.0 * diff)
         
     source_weights = {
-        "youtube": 60.0,
-        "nasa": 20.0,
+        "youtube": 120.0,
+        "nasa": 25.0,
         "dvids": 18.0,
         "wikimedia": 16.0,
         "archive": 14.0,
@@ -1527,12 +1534,12 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
     candidates = []
 
     CHANNEL_SOURCE_PRIORITY = {
-        "science":     ["pexels", "coverr", "youtube", "nasa", "dvids", "wikimedia", "archive", "pixabay"],
-        "nature":      ["pexels", "coverr", "pixabay", "youtube", "wikimedia", "archive"],
-        "mystery":     ["pexels", "coverr", "youtube", "archive", "wikimedia", "pixabay"],
-        "engineering": ["pexels", "coverr", "youtube", "nasa", "dvids", "wikimedia", "archive"],
-        "business":    ["pexels", "coverr", "youtube", "pixabay", "klipy"],
-        "general":     ["pexels", "coverr", "youtube", "pixabay", "nasa", "wikimedia", "archive", "dvids"],
+        "science":     ["youtube", "pexels", "coverr", "nasa", "dvids", "wikimedia", "archive", "pixabay"],
+        "nature":      ["youtube", "pexels", "coverr", "pixabay", "wikimedia", "archive"],
+        "mystery":     ["youtube", "pexels", "coverr", "archive", "wikimedia", "pixabay"],
+        "engineering": ["youtube", "pexels", "coverr", "nasa", "dvids", "wikimedia", "archive"],
+        "business":    ["youtube", "pexels", "coverr", "pixabay", "klipy"],
+        "general":     ["youtube", "pexels", "coverr", "pixabay", "nasa", "wikimedia", "archive", "dvids"],
     }
 
     def run_source_query(source: str, q: str) -> list[dict]:
