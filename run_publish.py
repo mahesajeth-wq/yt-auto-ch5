@@ -129,6 +129,11 @@ def main():
     # --- DECOUPLED PLATFORM UPLOADS ---
     print("\n🚀 Starting platform uploads...")
     
+    if os.environ.get("DISABLE_YT_UPLOAD") == "1":
+        print("\n⏸️ DISABLE_YT_UPLOAD=1 is set. Skipping direct YouTube upload to allow manual video verification.")
+        print("✅ Pre-upload verification & video generation complete. Video artifact saved successfully!")
+        sys.exit(0)
+    
     # 1. YouTube Upload
     yt_success = False
     try:

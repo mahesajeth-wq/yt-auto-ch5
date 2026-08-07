@@ -813,18 +813,13 @@ def _youtube_candidates(query: str, n: int = 5) -> list[dict]:
                     title_lower = title.lower()
                     bad_title_keywords = [
                         "lecture", "classroom", "blackboard", "chalkboard", "whiteboard", "tutorial", "course",
-                        "teacher", "presentation", "lesson", "explained", "visually", "visualized", "breakdown",
-                        "guide", "how to", "free stock", "stock footage", "watermark", "videohive", "shutterstock",
-                        "stocksubmitter", "knot9", "depositphotos", "dreamstime", "getty", "pond5", "envato", "preview",
-                        "istock", "download", "text", "subtitles", "slides", "powerpoint", "explainer", "overview",
-                        "infographic", "diagram", "illustration", "chart", "diagrams", "still", "figure", "textbook",
-                        "green screen", "chroma key", "greenscreen", "smartphone", "holding phone", "phone screen",
-                        "mobile screen", "scrolling", "mockup", "vertical smartphone", "mobile phone", "app review",
-                        "case", "phone case", "galaxy case", "iphone case", "unboxing", "review", "accessory", "accessories",
-                        "cover", "screen protector", "buy", "store", "price", "aliexpress", "amazon", "ebay", "shopping"
+                        "teacher", "presentation", "lesson", "slides", "powerpoint",
+                        "free stock", "watermark", "videohive", "shutterstock",
+                        "stocksubmitter", "knot9", "depositphotos", "dreamstime", "getty", "pond5", "envato",
+                        "istock", "buy", "store", "price", "aliexpress", "amazon", "ebay", "shopping"
                     ]
                     if any(bad in title_lower for bad in bad_title_keywords):
-                        print(f"[B-roll] Skipping text/explainer/classroom/greenscreen candidate: '{title}'")
+                        print(f"[B-roll] Skipping promotional/classroom YouTube candidate: '{title}'")
                         continue
                     
                     video_id = entry.get('id')
