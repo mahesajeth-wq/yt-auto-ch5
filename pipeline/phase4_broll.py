@@ -101,18 +101,17 @@ def _pexels_candidates(query: str, orientation: str, n: int = 8) -> list[dict]:
             headers={"Authorization": PEXELS_API_KEY},
             params={
                 "query": query,
-                "per_page": min(80, max(n * 3, 15)),
+                "per_page": min(80, max(n * 4, 20)),
                 "orientation": orientation,
-                "size": "medium",
             },
-            timeout=30,
+            timeout=25,
         )
         r.raise_for_status()
         videos = r.json().get("videos", [])
         candidates = []
         for video in videos:
             image_url = video.get("image")
-            video_files = [f for f in video.get("video_files", []) if f.get("quality") in ("hd", "sd")]
+            video_files = [f for f in video.get("video_files", []) if f.get("link")]
             if image_url and video_files:
                 video_files.sort(key=lambda f: f.get("width", 0), reverse=True)
                 candidates.append({
@@ -193,22 +192,24 @@ def _coverr_video(query: str, orientation: str = "landscape") -> str | None:
         return None
 
 
-def _coverr_candidates(query: str, orientation: str, n: int = 5) -> list[dict]:
+def _coverr_candidates(query: str, orientation: str = "landscape", n: int = 4) -> list[dict]:
     if not COVERR_API_KEY:
         return []
     try:
         clean_q = _sanitize_broll_query(query)
+        headers = {"Authorization": f"Bearer {COVERR_API_KEY}"} if not COVERR_API_KEY.startswith("Bearer") else {"Authorization": COVERR_API_KEY}
+        headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
         r = requests.get(
             "https://api.coverr.co/videos",
+            headers=headers,
             params={
                 "query": clean_q,
-                "api_key": COVERR_API_KEY,
                 "page": 0,
                 "size": min(40, max(n * 4, 15)),
                 "urls": "true",
                 "sort": "popular"
             },
-            timeout=30,
+            timeout=25,
         )
         r.raise_for_status()
         hits = r.json().get("hits", [])
@@ -238,39 +239,41 @@ def _coverr_candidates(query: str, orientation: str, n: int = 5) -> list[dict]:
         return []
 
 
-def _pixabay_candidates(query: str, n: int = 3) -> list[dict]:
+def _pixabay_candidates(query: str, n: int = 4) -> list[dict]:
     if not PIXABAY_API_KEY:
         return []
     try:
         r = requests.get(
             "https://pixabay.com/api/videos/",
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
             params={
                 "key": PIXABAY_API_KEY,
                 "q": query,
-                "per_page": min(50, max(n * 3, 10)),
+                "per_page": min(50, max(n * 4, 15)),
                 "order": "popular",
                 "safesearch": "true",
-                "min_width": 1920
+                "video_type": "all",
             },
-            timeout=30,
+            timeout=25,
         )
         r.raise_for_status()
         hits = r.json().get("hits", [])
         candidates = []
         for item in hits:
-            picture_id = item.get("picture_id")
-            thumb = None
-            if picture_id:
-                thumb = f"https://i.vimeocdn.com/video/{picture_id}_640x360.jpg"
-            
             videos_data = item.get("videos", {})
             video_url = None
+            thumb = None
             for size in ["large", "medium", "small", "tiny"]:
-                url = videos_data.get(size, {}).get("url")
-                if url:
-                    video_url = url
-                    break
-            if thumb and video_url:
+                vobj = videos_data.get(size, {})
+                if not video_url and vobj.get("url"):
+                    video_url = vobj.get("url")
+                if not thumb and vobj.get("thumbnail"):
+                    thumb = vobj.get("thumbnail")
+            
+            if not thumb:
+                thumb = item.get("userImageURL") or "https://pixabay.com/favicon.ico"
+                
+            if video_url:
                 candidates.append({
                     "video_url": video_url,
                     "thumb_url": thumb,
@@ -365,7 +368,7 @@ def _wikimedia_video_candidate(query: str) -> dict | None:
                     "action": "query",
                     "titles": title,
                     "prop": "imageinfo",
-                    "iiprop": "url|thumb",
+                    "iiprop": "url",
                     "iiurlwidth": "640",
                     "format": "json",
                 },
@@ -611,7 +614,7 @@ def _archive_candidates(query: str, n: int = 3) -> list[dict]:
             video_url = None
             for f in files:
                 name = f.get("name", "")
-                if (name.endswith(".mp4") or name.endswith(".webm") or name.endswith(".mkv") or name.endswith(".avi")) and int(f.get("size", 0)) > 10_000:
+                if (name.endswith(".mp4") or name.endswith(".webm") or name.endswith(".mkv") or name.endswith(".avi")) and int(f.get("size") or 0) > 10_000:
                     video_url = f"https://archive.org/download/{identifier}/{urllib.parse.quote(name)}"
                     break
             
