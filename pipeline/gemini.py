@@ -173,19 +173,21 @@ class _KeyPool:
                 self._cooldowns[idx] = reset_time
         else:
             # Transient rate limit (RPM/TPM) or server error
-            self._statuses[idx] = "active"
-            if status_code in (500, 502, 503, 504):
-                cooldown_duration = 10.0  # 10s for temporary server errors
+            self._failures[idx] += 1
+            if self._failures[idx] >= 2:
+                # 2 consecutive failures -> mark daily_exhausted to prevent tight loops
+                self._statuses[idx] = "daily_exhausted"
+                reset_time = _get_next_daily_reset_time()
+                cooldown_duration = reset_time - now
+                self._cooldowns[idx] = reset_time
             else:
-                cooldown_duration = 10.0  # 10s for RPM limits
-            
-            # Reset failure count if it was high, as this is transient
-            if self._failures[idx] >= 3:
-                self._failures[idx] = 1
-            self._cooldowns[idx] = now + cooldown_duration
+                self._statuses[idx] = "active"
+                cooldown_duration = 120.0 if status_code in (429, 0) else 10.0
+                self._cooldowns[idx] = now + cooldown_duration
 
         slot = idx + 1
         print(f"[KeyPool] Key slot {slot}/{len(self._keys)} marked failed (status {status_code}, status_label={self._statuses[idx]}, transient={transient}). Cooldown for {cooldown_duration:.0f}s (Until: {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime(self._cooldowns[idx]))})")
+        self._idx = (idx + 1) % len(self._keys)
         self._save_state()
 
     def mark_success(self, key: str):

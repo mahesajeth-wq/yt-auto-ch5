@@ -136,11 +136,15 @@ class JudgeClient:
         
     def review_video(self, video_path: str, metadata: dict) -> dict:
         last_error: Exception | None = None
-        max_attempts = max(1, len(_shared_pool) * 2)
+        max_attempts = min(3, len(_shared_pool))
+        start_ts = time.time()
         for attempt in range(max_attempts):
+            if time.time() - start_ts > 90:
+                print("[JudgeAI] Hard timeout (90s) reached. Raising exception to trigger local health fallback.")
+                break
             api_key = _get_judge_key()
             if not api_key:
-                continue
+                break
             slot = _shared_pool._keys.index(api_key) + 1
             try:
                 report = self._review_video_with_key(video_path, metadata, api_key)
@@ -150,15 +154,9 @@ class JudgeClient:
                 last_error = exc
                 status = _http_status(exc)
                 print(f"[JudgeAI] Key slot {slot}/{len(_shared_pool)} failed during review (status {status or 'unknown'}): {exc}")
-                if status in RETRIABLE_STATUS_CODES or status == 0:
-                    from pipeline.gemini import _is_daily_quota_exhausted
-                    response_obj = getattr(exc, "response", None)
-                    is_daily = response_obj is not None and _is_daily_quota_exhausted(response_obj)
-                    _shared_pool.mark_failed(api_key, status or 0, transient=not is_daily)
-                    _shared_pool._idx += 1
-                    continue
-                raise
-        raise RuntimeError("Judge AI: all Gemini keys exhausted during video review.") from last_error
+                _shared_pool.mark_failed(api_key, status or 429, transient=False)
+                continue
+        raise RuntimeError(f"Judge AI review skipped: {last_error or 'Keys exhausted/timeout'}")
 
     def _review_video_with_key(self, video_path: str, metadata: dict, api_key: str) -> dict:
         slot = _shared_pool._keys.index(api_key) + 1
