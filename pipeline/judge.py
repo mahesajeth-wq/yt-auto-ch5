@@ -199,7 +199,8 @@ Please watch the video and evaluate it against these 5 rubrics:
    - REJECT if: the title hook text card at the start of the video (first 1-2 seconds) has text that goes outside the frame boundaries or is cut off on either side. Text must be fully visible and centered.
    - ACCEPT if: subtitles are single-word style and appear roughly in sync (within 0.5 seconds of spoken word).
 4. **Music & Audio Quality**: Is the background music clean, and is it mixed correctly without overpowering the voiceover?
-5. **Retention & Loopability**: Does the video contain a retention element (like a rewatch callout in segment 4)? Does it loop back seamlessly from the last segment to the first segment's narration? Note: Segment 5 echoing Segment 1's THEME (not its exact wording) is the desired outcome — flag verbatim repetition of Segment 1's sentence as a script-quality issue.
+5. **Zero Black Screens (CRITICAL)**: Verify there are NO black screen sections, black placeholders, or blank dark screens anywhere in the video. If any segment or transition shows a black screen or blank canvas for > 0.8 seconds, you MUST set status="REJECTED", set score below 50, and list the failed segment numbers in issues!
+6. **Loop / Retention**: Is there a thematic transition or rewatch trigger from the final segment back to the first? loop back seamlessly from the last segment to the first segment's narration? Note: Segment 5 echoing Segment 1's THEME (not its exact wording) is the desired outcome — flag verbatim repetition of Segment 1's sentence as a script-quality issue.
 
 Scoring target: a publishable video should land around 91-94 when it has coherent visuals, readable captions, clean audio, strong hook, and no repeated clips. Reserve 80-90 for technically acceptable but weak videos that should be repaired before publishing.
 

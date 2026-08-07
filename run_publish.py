@@ -40,8 +40,21 @@ def main():
         else:
             print(f"Error: Thumbnail file not found. Checked: {thumbnail_path} and {fallback_thumb}")
             sys.exit(1)
-            
-    # --- JUDGE AI GATEKEEPER ---
+
+    # --- STRICT BLACK-SCREEN VERIFICATION CHECK ---
+    import subprocess
+    import re
+    print(f"\n🔍 Running strict FFmpeg black-screen verification on {video_path}...")
+    cmd_chk = ["ffmpeg", "-i", video_path, "-vf", "blackdetect=d=0.8:pix_th=0.10", "-f", "null", "-"]
+    res_chk = subprocess.run(cmd_chk, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, text=True, errors="ignore")
+    black_durations = [float(d) for d in re.findall(r"black_duration:([0-9.]+)", res_chk.stderr or "")]
+    if any(bd > 0.8 for bd in black_durations):
+        max_bd = max(black_durations)
+        print(f"\n❌ CRITICAL UPLOAD BLOCKED! Black screen section detected ({max_bd:.2f}s > 0.8s) in {video_path}!")
+        print("Upload to YouTube has been BLOCKED to prevent bad video publishing.")
+        sys.exit(1)
+    else:
+        print("✅ Strict black-screen verification PASSED! Zero black screens detected.\n")
     if not args.bypass_judge:
         print("\n⚖️ Initiating Judge AI visual and narrative check...")
         

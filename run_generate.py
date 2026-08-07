@@ -39,7 +39,16 @@ def _video_health_ok(video_path: str) -> tuple[bool, str]:
         return False, f"ffprobe failed: {exc}"
     if duration < 10:
         return False, f"duration too short: {duration:.1f}s"
-    return True, f"basic video health passed: {duration:.1f}s"
+    
+    import re
+    cmd_chk = ["ffmpeg", "-i", video_path, "-vf", "blackdetect=d=0.8:pix_th=0.10", "-f", "null", "-"]
+    res_chk = subprocess.run(cmd_chk, stderr=subprocess.PIPE, stdout=subprocess.DEVNULL, text=True, errors="ignore")
+    black_durations = [float(d) for d in re.findall(r"black_duration:([0-9.]+)", res_chk.stderr or "")]
+    if any(bd > 0.8 for bd in black_durations):
+        max_bd = max(black_durations)
+        return False, f"black screen section detected: {max_bd:.2f}s > 0.8s"
+
+    return True, f"basic video health passed: {duration:.1f}s, 0s black screen"
 
 
 def _repair_queries(seg: dict, judge_reason: str) -> list[str]:

@@ -77,12 +77,19 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
             if _pollinations_image(prompt_clean, synth_img, w=2160, h=3840):
                 _image_to_ken_burns_video(synth_img, broll_path, w, h, duration=duration)
             else:
-                cmd_synth = [
-                    "ffmpeg", "-y", "-f", "lavfi",
-                    "-i", f"color=c=0x0a1128:s={w}x{h}:d={duration}",
-                    "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
-                ]
-                subprocess.run(cmd_synth, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                print(f"[Assemble] Warning: Pollinations AI failed for segment {i}. Downloading 4K Unsplash photorealistic stock background...")
+                import urllib.request
+                fallback_img_url = f"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=2160&q=80"
+                try:
+                    urllib.request.urlretrieve(fallback_img_url, synth_img)
+                    _image_to_ken_burns_video(synth_img, broll_path, w, h, duration=duration)
+                except Exception:
+                    cmd_synth = [
+                        "ffmpeg", "-y", "-f", "lavfi",
+                        "-i", f"cellauto=s={w}x{h}:d={duration}:rule=30",
+                        "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
+                    ]
+                    subprocess.run(cmd_synth, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         print(f"Normalizing segment {i} B-roll to duration {duration:.3f}s (offset: {ss_offset:.3f}s)...")
 
