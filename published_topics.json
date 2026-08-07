@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How the quantum phenomenon of **Cooper pairs** allows superconductors to achieve perfect electrical conductivity with zero resistance by overcoming electron scattering.",
     "How gene drive actually works, forcing a specific genetic trait to spread through an entire wild population in just a few generations, potentially altering ecosystems irreversibly.",
     "Quantum error correction achieves 'below-threshold' performance, where increasing physical qubits reduces logical error rates, moving quantum computing from physics research to engineering discipline.",
     "How gravitational time dilation makes observers near a black hole perceive time as stopping for distant objects, a bizarre consequence of extreme gravity.",
@@ -89,8 +88,9 @@
     "The Crypto Security Paradox: Billions Lost in Ongoing Exchange Failures",
     "How the **r-process (rapid neutron capture)** in colliding neutron stars actually creates all the gold, platinum, and other heavy elements in the universe.",
     "Quantum Teleportation Breakthrough Physics #1786071161",
-    "Neutron Star Density Mysteries Astrophysics #1786075950"
+    "Neutron Star Density Mysteries Astrophysics #1786075950",
+    "Solar Wind Cosmic Shields Science #1786077568"
   ],
-  "subcluster_idx": 3,
-  "call_count": 92
+  "subcluster_idx": 4,
+  "call_count": 93
 }
