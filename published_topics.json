@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How gravitational time dilation makes observers near a black hole perceive time as stopping for distant objects, a bizarre consequence of extreme gravity.",
     "How quantum tunneling enables stars like our Sun to burn for billions of years, despite not having enough core temperature and pressure to overcome the electromagnetic repulsion between atomic nuclei.",
     "How negative refractive index metamaterials actually work, bending light in the 'wrong' direction to make objects appear closer or even invisible.",
     "How **CRISPR-Cas surveillance systems** can detect diseases with single-molecule precision, turning a gene-editing tool into a diagnostic powerhouse.",
@@ -89,8 +88,9 @@
     "Neutron Star Density Mysteries Astrophysics #1786075950",
     "Solar Wind Cosmic Shields Science #1786077568",
     "AI-Designed Viruses: A New Frontier in Biological Engineering as AI Creates Functional Phages",
-    "South Korea's Danuri orbiter captures first images of a SpaceX rocket's impact crater on the moon, offering unique insights into lunar surface mechanics and the effects of human-made space debris."
+    "South Korea's Danuri orbiter captures first images of a SpaceX rocket's impact crater on the moon, offering unique insights into lunar surface mechanics and the effects of human-made space debris.",
+    "How dark energy expands the observable universe cosmos #453"
   ],
-  "subcluster_idx": 1,
-  "call_count": 95
+  "subcluster_idx": 2,
+  "call_count": 96
 }
