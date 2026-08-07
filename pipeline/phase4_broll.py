@@ -1389,6 +1389,10 @@ def _score_candidate(item: dict, query: str, target_duration: float = 8.0) -> fl
         matches = sum(1 for w in query_words if w in text_to_check.lower())
         overlap_score = (matches / len(query_words)) * 30.0
         
+    # YouTube candidates retrieved via YouTube API search are inherently semantically relevant
+    if str(item.get("source", "")).lower() == "youtube":
+        overlap_score += 100.0
+        
     width = item.get("width")
     height = item.get("height")
     res_score = 5.0

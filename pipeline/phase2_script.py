@@ -117,8 +117,8 @@ You MUST return your response ONLY as a raw JSON object with no markdown syntax.
     {{
       "id": {segment_count},
       "narration": "Witty, sarcastic subject-aware Call-to-Action that MUST literally contain the exact phrase 'link in bio' or 'link in the description' AND grammatically flow into Segment 1's first sentence when read back-to-back — creating a seamless loop. Relaxed word count: up to 15 words.",
-      "broll_query": "typing on smartphone close up",
-      "broll_queries": ["typing on smartphone close up", "person holding phone scrolling", "tapping phone screen", "abstract loop animation"],
+      "broll_query": "{topic['topic']} real experiment documentary footage",
+      "broll_queries": ["{topic['topic']} real experiment documentary footage", "{topic['topic']} laboratory demonstration", "{topic['topic']} real world footage 4k", "{topic['topic']} visual proof animation"],
       "duration_target": 6
     }}
   ],
