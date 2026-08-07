@@ -1429,8 +1429,8 @@ def _score_candidate(item: dict, query: str, target_duration: float = 8.0) -> fl
         dur_score = max(0.0, 20.0 - 2.0 * diff)
         
     source_weights = {
-        "youtube": 120.0,
-        "nasa": 25.0,
+        "youtube": 250.0,
+        "nasa": 30.0,
         "dvids": 18.0,
         "wikimedia": 16.0,
         "archive": 14.0,
@@ -1441,6 +1441,10 @@ def _score_candidate(item: dict, query: str, target_duration: float = 8.0) -> fl
     }
     source_lower = str(item.get("source", "")).lower()
     source_score = source_weights.get(source_lower, 10.0)
+    
+    # Extra Fair Use bonus if YouTube candidate has verified uploader handle for attribution
+    if source_lower == "youtube" and item.get("uploader_handle"):
+        source_score += 50.0
     
     return float(overlap_score + res_score + dur_score + source_score)
 
