@@ -1,6 +1,5 @@
 {
   "topics": [
-    "Quantum error correction achieves 'below-threshold' performance, where increasing physical qubits reduces logical error rates, moving quantum computing from physics research to engineering discipline.",
     "How gravitational time dilation makes observers near a black hole perceive time as stopping for distant objects, a bizarre consequence of extreme gravity.",
     "How quantum tunneling enables stars like our Sun to burn for billions of years, despite not having enough core temperature and pressure to overcome the electromagnetic repulsion between atomic nuclei.",
     "How negative refractive index metamaterials actually work, bending light in the 'wrong' direction to make objects appear closer or even invisible.",
@@ -89,8 +88,9 @@
     "Quantum Teleportation Breakthrough Physics #1786071161",
     "Neutron Star Density Mysteries Astrophysics #1786075950",
     "Solar Wind Cosmic Shields Science #1786077568",
-    "AI-Designed Viruses: A New Frontier in Biological Engineering as AI Creates Functional Phages"
+    "AI-Designed Viruses: A New Frontier in Biological Engineering as AI Creates Functional Phages",
+    "South Korea's Danuri orbiter captures first images of a SpaceX rocket's impact crater on the moon, offering unique insights into lunar surface mechanics and the effects of human-made space debris."
   ],
-  "subcluster_idx": 0,
-  "call_count": 94
+  "subcluster_idx": 1,
+  "call_count": 95
 }
