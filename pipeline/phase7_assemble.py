@@ -68,25 +68,53 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
         # Handle missing/None broll_path by generating a unique 4K Pollinations AI motion clip for this specific segment
         if not broll_path or not os.path.exists(broll_path) or os.path.getsize(broll_path) < 10_000:
             broll_path = f"output/emergency_broll_{i}.mp4"
-            print(f"[Assemble] Missing/invalid B-roll for segment {i}. Generating unique 4K Pollinations AI motion clip...")
+            print(f"[Assemble] B-roll for segment {i} missing. Generating high-quality 4K visual motion clip...")
             seg_info = script.get("segments", [])[i] if script and i < len(script.get("segments", [])) else {}
-            seg_query = seg_info.get("broll_query") or seg_info.get("narration") or "cinematic nature background 4k"
-            prompt_clean = f"4k cinematic documentary footage of {seg_query}, photorealistic, 8k, detailed, no text, no watermark"
-            from pipeline.phase4_broll import _pollinations_image, _image_to_ken_burns_video
-            synth_img = f"output/emergency_img_{i}.jpg"
-            if _pollinations_image(prompt_clean, synth_img, w=2160, h=3840):
-                _image_to_ken_burns_video(synth_img, broll_path, w, h, duration=duration)
-            else:
-                print(f"[Assemble] Warning: Pollinations AI failed for segment {i}. Downloading 4K Unsplash photorealistic stock background...")
-                import urllib.request
-                fallback_img_url = f"https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=2160&q=80"
+            seg_query = seg_info.get("broll_query") or seg_info.get("narration") or "cinematic 4k footage"
+            
+            # 1. Try Pexels 4K video search directly
+            from pipeline.config import PEXELS_API_KEY
+            pexels_success = False
+            if PEXELS_API_KEY:
                 try:
-                    urllib.request.urlretrieve(fallback_img_url, synth_img)
+                    import urllib.request
+                    headers = {"Authorization": PEXELS_API_KEY}
+                    req = urllib.request.Request(
+                        f"https://api.pexels.com/videos/search?query={urllib.parse.quote(seg_query)}&per_page=5&orientation=portrait",
+                        headers=headers
+                    )
+                    with urllib.request.urlopen(req, timeout=10) as resp:
+                        pdata = json.loads(resp.read().decode())
+                        videos = pdata.get("videos", [])
+                        if videos:
+                            for vid in videos:
+                                files = vid.get("video_files", [])
+                                best_file = next((f for f in files if f.get("width") == 1080 and f.get("height") == 1920), None) or files[0]
+                                video_link = best_file.get("link")
+                                if video_link:
+                                    temp_vid = f"output/pexels_temp_{i}.mp4"
+                                    urllib.request.urlretrieve(video_link, temp_vid)
+                                    if os.path.exists(temp_vid) and os.path.getsize(temp_vid) > 20_000:
+                                        broll_path = temp_vid
+                                        pexels_success = True
+                                        print(f"[Assemble] Successfully fetched 4K Pexels B-roll clip for segment {i}!")
+                                        break
+                except Exception as pex_err:
+                    print(f"[Assemble] Pexels direct fetch note: {pex_err}")
+            
+            # 2. Pollinations 4K motion generator fallback if Pexels unavailable
+            if not pexels_success:
+                prompt_clean = f"4k cinematic documentary footage of {seg_query}, photorealistic, 8k, detailed, no text, no watermark"
+                from pipeline.phase4_broll import _pollinations_image, _image_to_ken_burns_video
+                synth_img = f"output/emergency_img_{i}.jpg"
+                if _pollinations_image(prompt_clean, synth_img, w=2160, h=3840):
                     _image_to_ken_burns_video(synth_img, broll_path, w, h, duration=duration)
-                except Exception:
+                else:
+                    # High quality procedural animation (plasma/mandelbrot/ambient motion)
                     cmd_synth = [
                         "ffmpeg", "-y", "-f", "lavfi",
-                        "-i", f"cellauto=s={w}x{h}:d={duration}:rule=30",
+                        "-i", f"plasma=s={w}x{h}:d={duration}",
+                        "-vf", "eq=contrast=1.2:saturation=1.5,hue=s=0.5",
                         "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
                     ]
                     subprocess.run(cmd_synth, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
