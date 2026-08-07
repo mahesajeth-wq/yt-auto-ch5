@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How Hawking radiation means black holes are not eternal, slowly evaporating over cosmic timescales.",
     "How the act of quantum measurement *collapses* a particle's wave function, thereby creating its observed reality.",
     "How the quantum phenomenon of **Cooper pairs** allows superconductors to achieve perfect electrical conductivity with zero resistance by overcoming electron scattering.",
     "How gene drive actually works, forcing a specific genetic trait to spread through an entire wild population in just a few generations, potentially altering ecosystems irreversibly.",
@@ -89,8 +88,9 @@
     "How precise control over a material's **Young's Modulus** at the nanoscale could allow an industry titan to engineer materials with impossible strength-to-weight ratios, dominating sectors from aerospace to construction.",
     "Myspace's unexpected comeback bid sparks a new social media brand war, challenging established giants with a fresh vision for user experience.",
     "The Crypto Security Paradox: Billions Lost in Ongoing Exchange Failures",
-    "How the **r-process (rapid neutron capture)** in colliding neutron stars actually creates all the gold, platinum, and other heavy elements in the universe."
+    "How the **r-process (rapid neutron capture)** in colliding neutron stars actually creates all the gold, platinum, and other heavy elements in the universe.",
+    "Quantum Teleportation Breakthrough Physics #1786071161"
   ],
-  "subcluster_idx": 1,
-  "call_count": 90
+  "subcluster_idx": 2,
+  "call_count": 91
 }
