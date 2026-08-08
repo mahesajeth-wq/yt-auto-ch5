@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How *gravitational lensing* reveals the invisible universe, where dark matter bends light but isn't seen.",
     "How **molecular chirality** means a drug's mirror image can be deadly, despite identical atomic composition.",
     "How **Xeno Nucleic Acids (XNAs)** reveal that life might not be limited to DNA and RNA, challenging biology's central dogma.",
     "Neuromorphic computing chips mimic the brain's energy efficiency for AI, processing information with vastly less power than traditional architectures.",
@@ -89,8 +88,9 @@
     "How dark energy expands the observable universe cosmos #497",
     "How analog AI accelerators revolutionize AI processing by performing computations directly in memory, exploiting Ohm's law to bypass the von Neumann bottleneck.",
     "James Webb Space Telescope observations reveal surprising 'too ancient' galaxies and 'unusual precision' in early universe structures, challenging existing cosmological models.",
-    "Scientists observe quantum entanglement in a centimeter-sized crystal at room temperature, suggesting macroscopic objects can exhibit 'spooky action at a distance'."
+    "Scientists observe quantum entanglement in a centimeter-sized crystal at room temperature, suggesting macroscopic objects can exhibit 'spooky action at a distance'.",
+    "How **negative absolute temperature** makes matter paradoxically hotter than any positive temperature, achieved through **population inversion** in quantum systems."
   ],
-  "subcluster_idx": 2,
-  "call_count": 101
+  "subcluster_idx": 3,
+  "call_count": 102
 }
