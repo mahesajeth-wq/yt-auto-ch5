@@ -1,6 +1,5 @@
 {
   "topics": [
-    "Topological qubits achieve enhanced fault tolerance through 'braiding' Majorana zero modes, offering inherent error resistance for quantum computing.",
     "How **Hubble's Law** means the expansion of space can make galaxies permanently unreachable, even if we traveled at light speed.",
     "How *gravitational lensing* reveals the invisible universe, where dark matter bends light but isn't seen.",
     "How **molecular chirality** means a drug's mirror image can be deadly, despite identical atomic composition.",
@@ -89,8 +88,9 @@
     "How dark energy expands the observable universe cosmos #453",
     "How cell-inspired nanoreactors efficiently convert sunlight into hydrogen peroxide, mimicking biological processes for cleaner chemical manufacturing.",
     "How dark energy expands the observable universe cosmos #497",
-    "How analog AI accelerators revolutionize AI processing by performing computations directly in memory, exploiting Ohm's law to bypass the von Neumann bottleneck."
+    "How analog AI accelerators revolutionize AI processing by performing computations directly in memory, exploiting Ohm's law to bypass the von Neumann bottleneck.",
+    "James Webb Space Telescope observations reveal surprising 'too ancient' galaxies and 'unusual precision' in early universe structures, challenging existing cosmological models."
   ],
-  "subcluster_idx": 0,
-  "call_count": 99
+  "subcluster_idx": 1,
+  "call_count": 100
 }
