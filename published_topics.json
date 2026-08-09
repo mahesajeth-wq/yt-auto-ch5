@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How the Delayed Choice Quantum Eraser experiment suggests future measurements can influence past quantum events, challenging our understanding of causality.",
     "How **shape memory alloys** actually work, where metals \"remember\" their original shape and return to it upon heating, even after severe deformation, due to a reversible solid-state phase change called **martensitic transformation**.",
     "How **synthetic gene circuits** enable living bacteria to perform complex computations, turning cells into miniature, programmable biological computers.",
     "Recent breakthroughs in photonic computing chips allow light to perform complex calculations, drastically accelerating AI and reducing energy consumption.",
@@ -89,8 +88,9 @@
     "Gene-Edited Hypoallergenic Pets: Scientists are using advanced gene-editing techniques to create hypoallergenic beagles, paving the way for a future where genetically engineered companion animals, including hypoallergenic cats and potentially even glow-in-the-dark rabbits, are a reality.",
     "How **next-generation humanoid robots** are achieving unprecedented capabilities, from full-body haptic feedback via 'smart skin' to direct brain-computer interface control, pushing them rapidly from labs to mass production lines.",
     "How **circumbinary planets** maintain stable orbits around two stars, defying the chaotic gravitational forces that would typically eject them due to specific orbital resonances.",
-    "A recent, near-collapse of a high-flying hedge fund, 'Situational Awareness,' has been publicly identified by Bank of America's CEO as a critical 'warning shot' for broader financial markets fueled by elevated valuations and excessive leverage."
+    "A recent, near-collapse of a high-flying hedge fund, 'Situational Awareness,' has been publicly identified by Bank of America's CEO as a critical 'warning shot' for broader financial markets fueled by elevated valuations and excessive leverage.",
+    "How billionaire investor Cliff Asness's AQR Capital Management transformed tax-loss harvesting into a powerful, continuous wealth-preserving strategy for the ultra-rich, allowing gains to compound with minimal tax friction and offsetting taxes from diverse investments."
   ],
-  "subcluster_idx": 2,
-  "call_count": 106
+  "subcluster_idx": 3,
+  "call_count": 107
 }
