@@ -87,13 +87,15 @@ THUMBNAIL_LAYOUTS = [
     "split_left",         # dark left panel with text, right panel shows frame
 ]
 
-# topic sub-cluster rotation for Science and Technology channel
+# topic sub-cluster rotation for Business, Wealth and Tech Monopolies channel
 SCIENCE_SUBCLUSTERS = [
-    "space exploration and astrophysics",
-    "physics and quantum mechanics mysteries",
-    "advanced chemistry and materials science",
-    "biotechnology and genetic engineering",
-    "future technology and computing breakthroughs",
+    "trillion-dollar tech monopolies and corporate power plays",
+    "economic collapses, market crashes and financial bubbles",
+    "secret wealth strategies of historical and modern billionaires",
+    "bizarre business models and marketing psychological tricks",
+    "global supply chain disruptions and resource monopolies",
+    "startup empire ascents and catastrophic corporate bankruptcies",
+    "future of artificial intelligence economics and automation disruption",
 ]
 
 YT_CATEGORY_EDUCATION = "27"
