@@ -1,6 +1,5 @@
 {
   "topics": [
-    "Neuromorphic computing chips mimic the brain's energy efficiency for AI, processing information with vastly less power than traditional architectures.",
     "How the **cosmological constant** (a form of dark energy) could lead to a \"Big Rip\" scenario, tearing apart even atoms as space expands faster than light.",
     "How the Delayed Choice Quantum Eraser experiment suggests future measurements can influence past quantum events, challenging our understanding of causality.",
     "How **shape memory alloys** actually work, where metals \"remember\" their original shape and return to it upon heating, even after severe deformation, due to a reversible solid-state phase change called **martensitic transformation**.",
@@ -89,8 +88,9 @@
     "Scientists observe quantum entanglement in a centimeter-sized crystal at room temperature, suggesting macroscopic objects can exhibit 'spooky action at a distance'.",
     "How **negative absolute temperature** makes matter paradoxically hotter than any positive temperature, achieved through **population inversion** in quantum systems.",
     "Gene-Edited Hypoallergenic Pets: Scientists are using advanced gene-editing techniques to create hypoallergenic beagles, paving the way for a future where genetically engineered companion animals, including hypoallergenic cats and potentially even glow-in-the-dark rabbits, are a reality.",
-    "How **next-generation humanoid robots** are achieving unprecedented capabilities, from full-body haptic feedback via 'smart skin' to direct brain-computer interface control, pushing them rapidly from labs to mass production lines."
+    "How **next-generation humanoid robots** are achieving unprecedented capabilities, from full-body haptic feedback via 'smart skin' to direct brain-computer interface control, pushing them rapidly from labs to mass production lines.",
+    "How **circumbinary planets** maintain stable orbits around two stars, defying the chaotic gravitational forces that would typically eject them due to specific orbital resonances."
   ],
-  "subcluster_idx": 0,
-  "call_count": 104
+  "subcluster_idx": 1,
+  "call_count": 105
 }
