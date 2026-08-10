@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How **synthetic gene circuits** enable living bacteria to perform complex computations, turning cells into miniature, programmable biological computers.",
     "Recent breakthroughs in photonic computing chips allow light to perform complex calculations, drastically accelerating AI and reducing energy consumption.",
     "How the **Lense-Thirring effect** means rapidly spinning neutron stars literally drag spacetime around them.",
     "How the Casimir effect reveals that even empty space is teeming with virtual particles, which can exert a measurable force on parallel plates.",
@@ -89,8 +88,9 @@
     "How **circumbinary planets** maintain stable orbits around two stars, defying the chaotic gravitational forces that would typically eject them due to specific orbital resonances.",
     "A recent, near-collapse of a high-flying hedge fund, 'Situational Awareness,' has been publicly identified by Bank of America's CEO as a critical 'warning shot' for broader financial markets fueled by elevated valuations and excessive leverage.",
     "How billionaire investor Cliff Asness's AQR Capital Management transformed tax-loss harvesting into a powerful, continuous wealth-preserving strategy for the ultra-rich, allowing gains to compound with minimal tax friction and offsetting taxes from diverse investments.",
-    "How the brain's ancient threat detection system makes us overpay for limited-edition products, due to the activation of the amygdala and the principle of psychological reactance."
+    "How the brain's ancient threat detection system makes us overpay for limited-edition products, due to the activation of the amygdala and the principle of psychological reactance.",
+    "The unprecedented demand for AI-specific memory (HBM) has dramatically reversed decades of falling RAM prices, pushing costs to 2007 levels and exposing a critical bottleneck in the global semiconductor supply chain."
   ],
-  "subcluster_idx": 4,
-  "call_count": 108
+  "subcluster_idx": 5,
+  "call_count": 109
 }
