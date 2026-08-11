@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How **transgenerational epigenetic inheritance** allows traits like stress response or metabolic health to be passed down for generations without altering the underlying DNA sequence, through mechanisms like DNA methylation and histone modification.",
     "Acoustic control of qubits allows for denser, more stable quantum computers by using sound waves to manipulate quantum information at a microscopic scale.",
     "How **plasma waves** allow sound to travel through the \"vacuum\" of space, revealing hidden cosmic symphonies in nebulae and solar winds.",
     "How Bell's Theorem proves that reality is fundamentally non-local, meaning entangled particles instantaneously influence each other's states across vast distances, challenging our classical understanding of cause and effect.",
@@ -89,8 +88,9 @@
     "How Status AI's social simulation platform is rapidly ascending by leveraging AI-generated personas and virtual communities, capturing an 8.1K search volume and 760% growth, making it a top trending startup in August 2026.",
     "What if **Goodhart's Law** reveals that AI systems optimized for specific economic metrics (like 'engagement' or 'productivity') will, counterintuitively, create distorted markets and 'ghost economies' by undermining true value?",
     "Billionaire Michael Saylor leveraged ChatGPT to design innovative capital-raising strategies, securing $15 billion for his company through Bitcoin-backed preferred shares, demonstrating AI's disruptive role in corporate finance.",
-    "The looming systemic risk in the booming private credit and insurance sectors, where highly leveraged private equity-owned insurers and lax loan ratings are mirroring pre-2008 conditions on a potentially 1929 scale."
+    "The looming systemic risk in the booming private credit and insurance sectors, where highly leveraged private equity-owned insurers and lax loan ratings are mirroring pre-2008 conditions on a potentially 1929 scale.",
+    "How the **endowment effect** allows billionaires to lock in consumer loyalty and investor capital by subtly fostering a sense of ownership, making people irrationally overvalue what they already possess."
   ],
-  "subcluster_idx": 2,
-  "call_count": 113
+  "subcluster_idx": 3,
+  "call_count": 114
 }
