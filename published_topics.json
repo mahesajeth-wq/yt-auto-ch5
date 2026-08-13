@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How Bell's Theorem proves that reality is fundamentally non-local, meaning entangled particles instantaneously influence each other's states across vast distances, challenging our classical understanding of cause and effect.",
     "How **Metal-Organic Frameworks (MOFs)** actually work, where solid materials are engineered to be 90% empty space, allowing them to store more gas than a pressurized tank at ambient conditions.",
     "How **genetic code expansion** allows synthetic biologists to create proteins with over 20 amino acids, building life with entirely new chemical capabilities.",
     "Breakthroughs in DNA data storage now allow exabytes of information to be encoded in microscopic volumes, with automated systems achieving high fidelity.",
@@ -89,8 +88,9 @@
     "The looming systemic risk in the booming private credit and insurance sectors, where highly leveraged private equity-owned insurers and lax loan ratings are mirroring pre-2008 conditions on a potentially 1929 scale.",
     "How the **endowment effect** allows billionaires to lock in consumer loyalty and investor capital by subtly fostering a sense of ownership, making people irrationally overvalue what they already possess.",
     "The 'Hyper Goo Maximalism' aesthetic is exploding, revealing how economic downturns drive consumer demand for \"micro indulgences\" and low-fi, Nickelodeon slime-esque branding in products and packaging.",
-    "The recent cyberattack on CEVA Logistics in Europe, coupled with surging global diesel prices due to tightening supplies, is creating a dual shockwave through international supply chains, threatening widespread delivery delays and increased operational costs."
+    "The recent cyberattack on CEVA Logistics in Europe, coupled with surging global diesel prices due to tightening supplies, is creating a dual shockwave through international supply chains, threatening widespread delivery delays and increased operational costs.",
+    "How **Groupthink** can doom even the most experienced corporate boards, where the pressure for consensus stifles critical dissent and leads to irrational, unified decisions that drive once-mighty empires into catastrophic bankruptcy."
   ],
-  "subcluster_idx": 5,
-  "call_count": 116
+  "subcluster_idx": 6,
+  "call_count": 117
 }
