@@ -3,8 +3,9 @@ name: Generate Short Video
 on:
   workflow_dispatch:
   schedule:
-    - cron: '30 6 * * *'
-    - cron: '30 13 * * *'
+    - cron: '0 3 * * *'    # 03:00 UTC / 08:30 IST (Short #1)
+    - cron: '30 10 * * *'  # 10:30 UTC / 16:00 IST (Short #2)
+    - cron: '0 18 * * *'   # 18:00 UTC / 23:30 IST (Short #3)
   push:
     branches: [ main ]
 
