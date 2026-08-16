@@ -1,3 +1,5 @@
+import os
+os.environ["DISABLE_HYPERFRAMES"] = "1"
 import argparse
 import json
 import os
@@ -285,7 +287,8 @@ def main():
             attempt += 1
         
         print("[Phase 8] Generating thumbnail...")
-        thumbnail = phase8.generate_thumbnail(final_video, script["thumbnail_text"], topic_prompt=script.get("title", ""))
+        thumb_text = script.get("thumbnail_text") or script.get("title") or "SECRET REVEALED"
+        thumbnail = phase8.generate_thumbnail(final_video, thumb_text, topic_prompt=script.get("title", ""))
         
         # Save metadata for publish step
         metadata_path = "output/metadata.json"
