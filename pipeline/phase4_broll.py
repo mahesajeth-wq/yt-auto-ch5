@@ -285,20 +285,23 @@ def _pixabay_candidates(query: str, n: int = 4) -> list[dict]:
         return []
 
 
-def _nasa_video_candidate(query: str) -> dict | None:
+def _nasa_candidates(query: str, n: int = 3) -> list[dict]:
     try:
         r = requests.get(
             "https://images-api.nasa.gov/search",
-            params=_nasa_params(query, "video", 20),
+            params=_nasa_params(query, "video", n * 3),
             headers={"User-Agent": "yt-auto/1.0"},
             timeout=20,
         )
         r.raise_for_status()
         items = r.json().get("collection", {}).get("items", [])
         if not items:
-            return None
-        
-        for item in items[:2]:
+            return []
+
+        candidates = []
+        for item in items:
+            if len(candidates) >= n:
+                break
             nasa_id = item.get("data", [{}])[0].get("nasa_id")
             links = item.get("links", [])
             thumb_url = None
@@ -308,13 +311,14 @@ def _nasa_video_candidate(query: str) -> dict | None:
                     break
             if not nasa_id or not thumb_url:
                 continue
-                
+
             r_asset = requests.get(
                 f"https://images-api.nasa.gov/asset/{urllib.parse.quote(nasa_id)}",
                 headers={"User-Agent": "yt-auto/1.0"},
-                timeout=15,
+                timeout=12,
             )
-            r_asset.raise_for_status()
+            if r_asset.status_code != 200:
+                continue
             items_asset = r_asset.json().get("collection", {}).get("items", [])
             video_url = None
             for a in items_asset:
@@ -329,18 +333,24 @@ def _nasa_video_candidate(query: str) -> dict | None:
                         video_url = href
                         break
             if video_url:
-                return {
+                candidates.append({
                     "video_url": video_url,
                     "thumb_url": thumb_url,
-                    "source": "NASA"
-                }
-        return None
+                    "source": "NASA",
+                    "title": item.get("data", [{}])[0].get("title", query)
+                })
+        return candidates
     except Exception as e:
         print(f"[B-roll] NASA candidate search failed for '{query}': {e}")
-        return None
+        return []
 
 
-def _wikimedia_video_candidate(query: str) -> dict | None:
+def _nasa_video_candidate(query: str) -> dict | None:
+    cands = _nasa_candidates(query, n=1)
+    return cands[0] if cands else None
+
+
+def _wikimedia_candidates(query: str, n: int = 3) -> list[dict]:
     try:
         r = requests.get(
             "https://commons.wikimedia.org/w/api.php",
@@ -348,20 +358,23 @@ def _wikimedia_video_candidate(query: str) -> dict | None:
                 "action": "query",
                 "list": "search",
                 "srnamespace": "6",  # File namespace
-                "srsearch": f"{query} filetype:video OR filetype:webm OR filetype:ogv",
+                "srsearch": f"{query} filetype:video",
                 "format": "json",
-                "srlimit": "3",
+                "srlimit": str(n * 2),
             },
-            headers={"User-Agent": "yt-auto/1.0"},
-            timeout=20,
+            headers={"User-Agent": "yt-auto/1.0 (educational-pipeline)"},
+            timeout=15,
         )
         r.raise_for_status()
         results = r.json().get("query", {}).get("search", [])
         if not results:
-            return None
-  
-        for res in results[:2]:
-            title = res["title"]
+            return []
+
+        candidates = []
+        for res in results:
+            if len(candidates) >= n:
+                break
+            title = res.get("title", "")
             r_info = requests.get(
                 "https://commons.wikimedia.org/w/api.php",
                 params={
@@ -372,26 +385,33 @@ def _wikimedia_video_candidate(query: str) -> dict | None:
                     "iiurlwidth": "640",
                     "format": "json",
                 },
-                headers={"User-Agent": "yt-auto/1.0"},
-                timeout=15,
+                headers={"User-Agent": "yt-auto/1.0 (educational-pipeline)"},
+                timeout=10,
             )
-            r_info.raise_for_status()
+            if r_info.status_code != 200:
+                continue
             pages = r_info.json().get("query", {}).get("pages", {})
             for page_id, page_data in pages.items():
                 imageinfo = page_data.get("imageinfo", [])
                 if imageinfo:
                     video_url = imageinfo[0].get("url")
-                    thumb_url = imageinfo[0].get("thumburl")
+                    thumb_url = imageinfo[0].get("thumburl") or imageinfo[0].get("url")
                     if video_url and thumb_url:
-                        return {
+                        candidates.append({
                             "video_url": video_url,
                             "thumb_url": thumb_url,
-                            "source": "Wikimedia"
-                        }
-        return None
+                            "source": "Wikimedia",
+                            "title": title.replace("File:", ""),
+                        })
+        return candidates
     except Exception as e:
-        print(f"[B-roll] Wikimedia video candidate failed for '{query}': {e}")
-        return None
+        print(f"[B-roll] Wikimedia video candidates failed for '{query}': {e}")
+        return []
+
+
+def _wikimedia_video_candidate(query: str) -> dict | None:
+    cands = _wikimedia_candidates(query, n=1)
+    return cands[0] if cands else None
 
 
 
@@ -499,35 +519,93 @@ def _wikimedia_video(query: str) -> str | None:
         return None
 
 
-def _dvids_candidates(query: str, n: int = 3) -> list[dict]:
+def resolve_dvids_mp4(page_url: str) -> str | None:
     try:
-        r = requests.get(
-            "https://www.dvidshub.net/api/search",
-            params={"query": query, "type": "video", "rows": n * 3, "output": "json"},
-            headers={"User-Agent": "Mozilla/5.0 (compatible; yt-auto/1.0)"},
-            timeout=20,
-        )
-        r.raise_for_status()
-        results = r.json().get("results", [])
-        out = []
-        for item in results:
-            v = item.get("download_url") or item.get("file_url")
-            t = item.get("thumbnail_url") or item.get("image_url")
-            title = item.get("title", "")
-            id_val = item.get("id")
-            if v and t:
-                out.append({
-                    "video_url": v,
-                    "thumb_url": t,
-                    "source": "DVIDS",
-                    "title": title,
-                    "id": id_val,
-                    "width": 1920
-                })
-        return out[:n]
-    except Exception as e:
-        print(f"[B-roll] DVIDS search failed for '{query}': {e}")
-        return []
+        r = requests.get(page_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}, timeout=10)
+        if r.status_code == 200:
+            mp4s = re.findall(r'https?://[^\"]+\.mp4[^\"]*', r.text)
+            if mp4s:
+                return mp4s[0]
+    except Exception:
+        pass
+    return None
+
+
+def _dvids_candidates(query: str, n: int = 3) -> list[dict]:
+    dvids_key = os.environ.get("DVIDS_API_KEY", "")
+    candidates = []
+    if dvids_key:
+        try:
+            r = requests.get(
+                "https://api.dvidshub.net/v1/search",
+                params={"api_key": dvids_key, "q": query, "type": "video", "max_results": n * 2},
+                headers={"User-Agent": "yt-auto/1.0"},
+                timeout=10,
+            )
+            if r.status_code == 200:
+                results = r.json().get("results", [])
+                for item in results:
+                    v = item.get("download_url") or item.get("file_url")
+                    t = item.get("thumbnail_url") or item.get("image_url")
+                    if v and t:
+                        candidates.append({
+                            "video_url": v,
+                            "thumb_url": t,
+                            "source": "DVIDS",
+                            "title": item.get("title", query),
+                            "id": item.get("id"),
+                            "width": 1920
+                        })
+        except Exception:
+            pass
+
+    if not candidates:
+        try:
+            r = requests.get(
+                "https://www.dvidshub.net/rss/search",
+                params={"q": query, "filter[type]": "video"},
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
+                timeout=10,
+            )
+            if r.status_code == 200:
+                import xml.etree.ElementTree as ET
+                root = ET.fromstring(r.content)
+                items = root.findall(".//item")
+                for item in items:
+                    if len(candidates) >= n:
+                        break
+                    title = item.findtext("title") or ""
+                    link = item.findtext("link") or ""
+                    thumb = None
+                    for elem in item.iter():
+                        if "thumbnail" in elem.tag and "url" in elem.attrib:
+                            thumb = elem.attrib["url"]
+                            break
+                    vid_id = None
+                    if thumb:
+                        m = re.search(r'video/\d+/(\d+)/', thumb)
+                        if m:
+                            vid_id = m.group(1)
+                    if not vid_id and link:
+                        m = re.search(r'video/(\d+)', link)
+                        if m:
+                            vid_id = m.group(1)
+                    if vid_id and thumb:
+                        page_url = f"https://www.dvidshub.net/video/{vid_id}"
+                        direct_mp4 = resolve_dvids_mp4(page_url)
+                        video_target = direct_mp4 if direct_mp4 else page_url
+                        candidates.append({
+                            "video_url": video_target,
+                            "thumb_url": thumb,
+                            "source": "DVIDS",
+                            "title": title,
+                            "id": vid_id,
+                            "width": 1920
+                        })
+        except Exception as e:
+            print(f"[B-roll] DVIDS search failed for '{query}': {e}")
+
+    return candidates[:n]
 
 def _dvids_video(query: str) -> str | None:
     candidates = _dvids_candidates(query, n=1)
@@ -885,9 +963,10 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
                     "--extractor-args", "youtube:player_client=android",
                     "--user-agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36",
                     "--no-check-certificates",
+                    "--socket-timeout", "4",
                     url
                 ]
-                res_info = subprocess.run(cmd_info, capture_output=True, text=True, check=True)
+                res_info = subprocess.run(cmd_info, capture_output=True, text=True, check=True, timeout=5)
                 info = json.loads(res_info.stdout)
                 duration_secs = float(info.get("duration", 0.0))
             except Exception as e:
@@ -907,12 +986,12 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
                 
             section_arg = f"*{start_time:.1f}-{end_time:.1f}"
             
-            # 3. Try multiple client extractors (android -> ios -> mweb -> tv) in waterfall loop
+            # 3. Try top client extractors in waterfall loop (tv_embedded -> android -> ios -> web_safari)
             clients_to_try = [
+                ("tv_embedded", "Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/76.0.3809.146 TV Safari/537.36"),
                 ("android", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"),
                 ("ios", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1"),
-                ("mweb", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"),
-                ("tv", "Mozilla/5.0 (SMART-TV; Linux; Tizen 5.0) AppleWebKit/537.36 (KHTML, like Gecko) Version/5.0 TV Safari/537.36")
+                ("web_safari", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15")
             ]
             
             for client_name, user_agent in clients_to_try:
@@ -920,16 +999,20 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
                     "yt-dlp",
                     "--download-sections", section_arg,
                     "--extractor-args", f"youtube:player_client={client_name}",
-                    "--format", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
+                    "--format", "bestvideo[height>=720][height<=1080]+bestaudio/bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
                     "--merge-output-format", "mp4",
                     "--user-agent", user_agent,
                     "--no-check-certificates",
-                    "--retries", "3",
+                    "--retries", "1",
+                    "--socket-timeout", "4",
                     "--output", out_path,
                     url
                 ]
                 print(f"[B-roll] Running yt-dlp section download ({client_name} client)...")
-                subprocess.run(cmd_dl, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                try:
+                    subprocess.run(cmd_dl, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+                except subprocess.TimeoutExpired:
+                    print(f"[B-roll] yt-dlp section download ({client_name}) timed out after 5s.")
                 if os.path.exists(out_path) and os.path.getsize(out_path) > 10_000:
                     print(f"[B-roll] YouTube slice download SUCCESS with {client_name} client!")
                     break
@@ -1393,6 +1476,16 @@ def _score_candidate(item: dict, query: str, target_duration: float = 8.0) -> fl
     if str(item.get("source", "")).lower() == "youtube":
         overlap_score += 100.0
         
+    # Negative penalty for watermarked previews, timecode overlays, vlogs, podcasts, reactions
+    bad_keywords = [
+        "stock footage", "preview", "watermark", "shutterstock", "getty", "pond5", 
+        "storyblocks", "adobe stock", "timecode", "sample", "vlog", "podcast", 
+        "interview", "talking head", "reaction", "daily vlog", "my day", "unboxing", "review", "vlogger"
+    ]
+    for bad_w in bad_keywords:
+        if bad_w in text_to_check.lower():
+            overlap_score -= 150.0
+
     width = item.get("width")
     height = item.get("height")
     res_score = 5.0
@@ -1433,22 +1526,22 @@ def _score_candidate(item: dict, query: str, target_duration: float = 8.0) -> fl
         dur_score = max(0.0, 20.0 - 2.0 * diff)
         
     source_weights = {
-        "youtube": 250.0,
-        "nasa": 30.0,
-        "dvids": 18.0,
-        "wikimedia": 16.0,
-        "archive": 14.0,
-        "coverr": 18.0,
-        "pexels": 15.0,
-        "pixabay": 14.0,
-        "klipy": 8.0
+        "nasa": 160.0,
+        "pexels": 150.0,
+        "pixabay": 140.0,
+        "coverr": 135.0,
+        "youtube": 125.0,
+        "dvids": 50.0,
+        "wikimedia": 40.0,
+        "archive": 30.0,
+        "klipy": 20.0
     }
     source_lower = str(item.get("source", "")).lower()
     source_score = source_weights.get(source_lower, 10.0)
     
     # Extra Fair Use bonus if YouTube candidate has verified uploader handle for attribution
     if source_lower == "youtube" and item.get("uploader_handle"):
-        source_score += 50.0
+        source_score += 20.0
     
     return float(overlap_score + res_score + dur_score + source_score)
 
