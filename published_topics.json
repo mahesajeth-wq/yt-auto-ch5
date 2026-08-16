@@ -1,6 +1,5 @@
 {
   "topics": [
-    "The Streaming Wars' Billion-Dollar Blunder: How Content Overspending Derailed Media Giants' Profitability.",
     "How the LEGO Group almost went bankrupt by abandoning its core brick system, only to be saved by a counterintuitive 'back to basics' strategy under J\u00f8rgen Vig Knudstorp.",
     "Microsoft's Strategic Pivot: Xbox at a Crossroads for Profitability",
     "Economists warn of an impending AI market bubble burst, drawing parallels to the dot-com crash, with some predicting a significant correction in the second half of 2026 due to 'silly valuations' and 'feverish' data center spending.",
@@ -89,8 +88,9 @@
     "The critical and increasingly vital role of ultra-private family offices acting as 'control centers' for managing and preserving complex generational billionaire wealth.",
     "The 'Things That Are Worth Every Penny' trend is exploding, showcasing a psychological marketing trick where brands implicitly encourage perceived value and justify premium pricing by leveraging social proof and aspirational consumer justification.",
     "How the minute atomic weight differences between **isotopes** of the same element, requiring technologies akin to nuclear enrichment, create multi-billion dollar resource monopolies for medical diagnostics and advanced semiconductors.",
-    "How dark energy expands the observable universe cosmos #657"
+    "How dark energy expands the observable universe cosmos #657",
+    "The 'Quiet' AI Job Transformation: How AI is reshaping job quality, not just quantity, creating a 'disposable worker' economy as roles shift from execution to supervision and demand new skill sets."
   ],
-  "subcluster_idx": 6,
-  "call_count": 124
+  "subcluster_idx": 0,
+  "call_count": 125
 }
