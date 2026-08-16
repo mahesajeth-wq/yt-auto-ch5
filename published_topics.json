@@ -1,6 +1,5 @@
 {
   "topics": [
-    "Microsoft's Strategic Pivot: Xbox at a Crossroads for Profitability",
     "Economists warn of an impending AI market bubble burst, drawing parallels to the dot-com crash, with some predicting a significant correction in the second half of 2026 due to 'silly valuations' and 'feverish' data center spending.",
     "How the Pets.com sock puppet's wildly successful marketing campaign actually masked and accelerated its dot-com bust collapse by obscuring fundamental economic flaws.",
     "How the 'Golden Age' of 1950s advertising, despite its simplicity, established foundational principles of emotional branding and multi-channel marketing that are critically informing today's complex digital strategies.",
@@ -89,8 +88,9 @@
     "How the minute atomic weight differences between **isotopes** of the same element, requiring technologies akin to nuclear enrichment, create multi-billion dollar resource monopolies for medical diagnostics and advanced semiconductors.",
     "How dark energy expands the observable universe cosmos #657",
     "The 'Quiet' AI Job Transformation: How AI is reshaping job quality, not just quantity, creating a 'disposable worker' economy as roles shift from execution to supervision and demand new skill sets.",
-    "How trillion-dollar tech monopolies exploit **phase transitions** in network effects to achieve irreversible market dominance, like water suddenly turning to ice."
+    "How trillion-dollar tech monopolies exploit **phase transitions** in network effects to achieve irreversible market dominance, like water suddenly turning to ice.",
+    "The Unseen Threat: How Fake News Is Manipulating Trillions in Global Stock Markets, causing rapid gains and losses."
   ],
-  "subcluster_idx": 1,
-  "call_count": 126
+  "subcluster_idx": 2,
+  "call_count": 127
 }
