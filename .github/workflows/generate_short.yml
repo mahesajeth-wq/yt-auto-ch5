@@ -3,9 +3,9 @@ name: Generate Short Video
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 3 * * *'    # 03:00 UTC / 08:30 IST (Short #1)
-    - cron: '30 10 * * *'  # 10:30 UTC / 16:00 IST (Short #2)
-    - cron: '0 18 * * *'   # 18:00 UTC / 23:30 IST (Short #3)
+    - cron: '0 3 * * *'    # Short #1
+    - cron: '30 10 * * *'   # Short #2
+    - cron: '0 18 * * *'  # Short #3
   push:
     branches: [ main ]
 
@@ -19,7 +19,7 @@ concurrency:
 jobs:
   generate-and-publish:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 60
     env:
       PYTHONUNBUFFERED: "1"
       BROLL_SEGMENT_BUDGET_SECONDS: "180"
@@ -57,7 +57,7 @@ jobs:
         run: pip install -r requirements.txt && pip install -U --pre "yt-dlp[default]"
 
       - name: Generate Short
-        timeout-minutes: 160
+        timeout-minutes: 45
         env:
           GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
           PEXELS_API_KEY:    ${{ secrets.PEXELS_API_KEY }}
@@ -74,7 +74,7 @@ jobs:
           BYPASS_VISION_MATCH: "0"
           DISABLE_HYPERFRAMES: "1"
           DISABLE_YT_UPLOAD: "1"
-          CHANNEL_NICHE: "science"
+          CHANNEL_NICHE: "business"
         run: |
           for attempt in 1 2; do
             echo "Generate attempt ${attempt}/2"
@@ -82,7 +82,7 @@ jobs:
             if [ "$attempt" -gt 1 ] && [ -d output ]; then
               resume_arg="--resume"
             fi
-            timeout 25m python run_generate.py --format short $resume_arg && exit 0
+            timeout 20m python run_generate.py --format short $resume_arg && exit 0
             code=$?
             if [ "$code" -eq 124 ]; then
               echo "Generate attempt ${attempt} timed out"
@@ -97,7 +97,7 @@ jobs:
           exit 1
 
       - name: Publish to YouTube
-        timeout-minutes: 20
+        timeout-minutes: 15
         env:
           DM_API_KEY:       ${{ secrets.DM_API_KEY }}
           DM_API_SECRET:    ${{ secrets.DM_API_SECRET }}
@@ -119,11 +119,11 @@ jobs:
         run: |
           for attempt in 1 2 3; do
             echo "Publish attempt ${attempt}/3"
-            timeout 15m python run_publish.py && exit 0
+            timeout 12m python run_publish.py && exit 0
             code=$?
             echo "Publish attempt ${attempt} failed with exit ${code}"
             if [ "$attempt" -lt 3 ]; then
-              sleep $((attempt * 120))
+              sleep $((attempt * 60))
             fi
           done
           exit 1

@@ -221,7 +221,7 @@ def _publish(
         "time_end": now_ms,
     })
 
-    channel_id = RUMBLE_CHANNEL_ID if RUMBLE_CHANNEL_ID else "undefined"
+    channel_id = RUMBLE_CHANNEL_ID if RUMBLE_CHANNEL_ID else ""
 
     form_data = {
         "title": title,
@@ -264,21 +264,24 @@ def _publish(
     )
     r.raise_for_status()
 
-    # Parse response — HTML wrapping JS: uf.response.setSuccess({...}, N)
-    if "setSuccess" in r.text:
-        url_match = re.search(r'url:\s*["\']([^"\']+)["\']', r.text)
-        fid_match = re.search(r'fid:\s*(\d+)', r.text)
-        return {
-            "url": url_match.group(1) if url_match else "",
-            "fid": fid_match.group(1) if fid_match else ""
-        }
+    # Parse response — HTML wrapping JS: uf.response.setSuccess({...}, N) or JSON
+    text = r.text
+    url_match = re.search(r'["\']?url["\']?\s*[:=]\s*["\']([^"\']+)["\']', text)
+    fid_match = re.search(r'["\']?fid["\']?\s*[:=]\s*["\']?(\d+)["\']?', text)
+
+    if url_match or fid_match:
+        url = url_match.group(1).replace("\\/", "/") if url_match else ""
+        fid = fid_match.group(1) if fid_match else ""
+        return {"url": url, "fid": fid}
 
     # Fallback — check for error
-    if "setError" in r.text or "setErrors" in r.text:
-        raise RuntimeError(f"[Rumble] Publish error. Response: {r.text[:500]}")
+    if "setError" in text or "setErrors" in text:
+        err_match = re.search(r'setError(?:s)?\s*\(\s*["\']([^"\']+)["\']', text)
+        err_detail = err_match.group(1) if err_match else text[:500]
+        raise RuntimeError(f"[Rumble] Publish error. Response: {err_detail}")
 
     # If we can't parse but got 200, log and return partial
-    print(f"[Rumble] Warning: Could not parse success response. Raw: {r.text[:300]}")
+    print(f"[Rumble] Warning: Could not parse success response. Raw: {text[:300]}")
     return {"url": "", "fid": ""}
 
 

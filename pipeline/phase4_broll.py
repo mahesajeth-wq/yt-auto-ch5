@@ -1,3 +1,5 @@
+import socket
+socket.setdefaulttimeout(15.0)
 import os
 import re
 import random
@@ -1777,13 +1779,13 @@ def fetch_broll(query: str, format_type: str, segment_index: int, duration: floa
             from pipeline.vision_match import vision_rank_broll
             best_idx, match_found = vision_rank_broll(thumbs, narration, query)
 
-            # Sort valid_candidates so best_idx is first, followed by remaining candidates
+            # Sort valid_candidates so best_idx is chosen; if rejected, discard batch
             candidate_order = []
             if match_found and best_idx is not None and best_idx < len(valid_candidates):
                 candidate_order.append(valid_candidates[best_idx])
-                candidate_order.extend([c for i, c in enumerate(valid_candidates) if i != best_idx])
             else:
-                candidate_order = valid_candidates
+                print(f"[B-roll] Segment {segment_index}: Vision match rejected all candidate clips. Discarding batch.")
+                candidate_order = []
 
             for chosen in candidate_order:
                 print(f"[B-roll] Attempting download for source: {chosen.get('source', 'Unknown')} ({chosen['video_url'][:50]}...)")
@@ -2017,9 +2019,7 @@ def _has_baked_text_ocr(frame_path: str) -> bool:
             winner_idx = best_idx
             print(f"[B-roll] Parallel winner chosen! Source: {winner['label']} (Index: {best_idx})")
         else:
-            winner = downloaded_results[0]
-            winner_idx = 0
-            print(f"[B-roll] Fallback video candidate chosen! Source: {winner['label']} (Index: 0)")
+            print(f"[B-roll] Segment {segment_index}: Vision match rejected all parallel downloads. Discarding to trigger AI fallback.")
         
         # Run the video through Hyperframes overlays
         print(f"[B-roll] Winner video. Running Hyperframes overlays...")

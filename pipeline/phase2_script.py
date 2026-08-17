@@ -42,7 +42,7 @@ def generate_script(topic: dict, format_type: str) -> dict:
         prompt = f"""Generate an extremely viral, high-retention 25-35 second YouTube Short educational script on the topic: "{topic['topic']}".
 Use the following hook concept as your core theme: "{hook_formatted}" (short hook: "{topic.get('short_hook', '')}").
 
-Narration Style Requirements (with CH1 EduFun Niche Quality Signals):
+Narration Style Requirements :
 1. Pacing & Punchiness: 5 to 15 words per segment's narration. CRITICAL: NEVER split a single sentence across multiple segments! Each segment MUST contain 1 or 2 complete, self-contained sentences. If you split a sentence, the voiceover will pause awkwardly mid-sentence.
 2. Conversational & Extreme Simplicity: Use ONLY 5th-grade vocabulary. Extremely simple words, no complex grammar, no SAT words. Must be so simple a 10-year-old understands instantly.
 3. Engaging Tone: The voiceover narration must be conversational, highly engaging, and relatable—like a friend telling an exciting story. Write the voiceover to be energetic, warm, and inviting.
@@ -68,10 +68,19 @@ search term of 1-3 CONCRETE PHYSICAL NOUNS MAXIMUM (e.g., "water pipes", "ancien
 Write exactly what a human would type into a stock video search bar. Use concrete nouns and visual objects — NOT instructions, verbs, or descriptions of what you want.
 
 CRITICAL BROLL QUERY RULES:
-- EVERY segment's broll_query MUST directly represent the exact physical subject mentioned in THAT SPECIFIC segment's narration line! (e.g., if narration mentions Pluto or Charon, broll_query MUST be "Pluto moon", "spinning planet", or "mountain range aerial"). NEVER output unrelated terms like "black hole" unless the narration explicitly mentions black holes!
-- MUST be 1-3 simple, concrete physical nouns (e.g. "water pipes", "ancient scroll", "mummy coffin", "sea sponges", "gold jewelry", "smartphone", "mountain peaks aerial").
-- NEVER include abstract adjectives, verbs, or meta-words like "animated", "defect", "dramatic", "unraveling", "stuck", "shattered", "cross section", "concept", "visualization", "illustration".
-- Write queries that represent real physical footage found in stock video libraries or YouTube documentaries.
+- EVERY segment's broll_query MUST directly represent the exact physical subject mentioned in THAT SPECIFIC segment's narration line!
+- STRICT CONCRETE PHYSICAL TRANSLATION GRAMMAR:
+  * ZERO METAPHOR POLICY: NEVER use conceptual proxies or visual metaphors (e.g. FORBIDDEN: 'car crash', 'space fabric stretching', 'climate change graph', 'tweet screenshot', 'domino effect', 'ticking clock', 'lightbulb', 'car crash test dummy', 'graph acceleration').
+  * MANDATORY CONCRETE PHYSICAL MATTER: Translate abstract concepts into real physical matter, documentary artifacts, field specimens, or scientific instruments:
+    - Economy / Market Crash -> "wall street exchange trading floor panic", "stock ticker red screen trading floor", "bank vault gold bars"
+    - Spacetime / Dark Energy -> "hubble deep field galaxy cluster", "supernova explosion space telescope", "james webb space telescope nebula"
+    - Siege / Bone Injury -> "archaeology excavated skeleton femur", "medieval catapult siege wall impact", "ancient skull bone fracture"
+    - Social Media / Online News -> "press conference microphone podium", "broadcast television studio cameras", "smartphone news feed scrolling"
+    - Biology / Brain Organoids -> "electron microscope neuron synapse fluorescence", "petri dish cell culture laboratory", "microchip silicon wafer cleanroom"
+    - Climate / Nature Warming -> "ancient glacier ice core drilling", "wilted forest tree canopy aerial", "desert drought cracked earth"
+  * SYNTAX: [Physical Locale / Domain] + [Concrete Material Object] + [Observable Optical State]
+- MUST be 1-4 concrete physical nouns without meta-adjectives ('animated', 'concept', 'visualization', 'defect', 'dramatic', 'illustration').
+- Write queries that represent real physical footage found in stock video libraries or documentary archives.
 
 CORRECT examples: "Stephen Hawking wheelchair", "DNA double helix",
 "quantum computer chip", "black hole space", "astronaut spacewalk",
@@ -147,7 +156,7 @@ For the final segment (Segment {segment_count}) specifically:
         prompt = f"""Generate a comprehensive 7-10 minute YouTube educational script on the topic: "{topic['topic']}".
 The script must have 15 to 18 segments, each targeting 25-35 seconds of narration.
 
-Narration Style Requirements (with CH1 EduFun Niche Quality Signals):
+Narration Style Requirements :
 1. Conversational & Simple Language: Use very simple, easy-to-understand, and highly relatable words that anyone can easily follow. Avoid obscure, complex, or overly difficult English vocabulary. Keep the narration friendly, extremely engaging, and relatable—like a friend explaining an amazing topic.
 2. Engaging Tone: The voiceover narration must be conversational, highly engaging, and relatable—like a friend telling an exciting story. Write the voiceover to be energetic, warm, and inviting.
 Structure the narrative into:

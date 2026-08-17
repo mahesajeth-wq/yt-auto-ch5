@@ -81,34 +81,10 @@ Each object must have exactly these fields:
         import random, time
         rand_id = int(time.time()) % 1000
         topics_list = [
-            {
-                "topic": f"How dark energy expands the observable universe cosmos #{rand_id}",
-                "short_hook": "Dark energy is tearing space apart.",
-                "hook_type": "curiosity_gap",
-                "for_format": "both",
-                "subcluster": current_subcluster
-            },
-            {
-                "topic": f"Quantum Teleportation Breakthrough Physics #{int(time.time())}",
-                "short_hook": "Information traveled instantly across space.",
-                "hook_type": "curiosity_gap",
-                "for_format": "both",
-                "subcluster": current_subcluster
-            },
-            {
-                "topic": f"Neutron Star Density Mysteries Astrophysics #{int(time.time()) + 1}",
-                "short_hook": "One teaspoon weighs a billion tons.",
-                "hook_type": "curiosity_gap",
-                "for_format": "both",
-                "subcluster": current_subcluster
-            },
-            {
-                "topic": f"Solar Wind Cosmic Shields Science #{int(time.time()) + 2}",
-                "short_hook": "Sun protects Earth from deep space radiation.",
-                "hook_type": "curiosity_gap",
-                "for_format": "both",
-                "subcluster": current_subcluster
-            }
+            {"topic": f"Standard Oil Monopoly Antitrust Breakup #{rand_id}", "short_hook": "Single monopoly controlled ninety percent of oil.", "hook_type": "curiosity_gap", "for_format": "both", "subcluster": current_subcluster},
+            {"topic": f"Dutch East India Company Mega Corporation Value #{rand_id+1}", "short_hook": "Most valuable company in human history.", "hook_type": "curiosity_gap", "for_format": "both", "subcluster": current_subcluster},
+            {"topic": f"2008 Lehman Brothers Liquidity Contagion Crash #{rand_id+2}", "short_hook": "Global financial markets froze in days.", "hook_type": "curiosity_gap", "for_format": "both", "subcluster": current_subcluster},
+            {"topic": f"TSMC Semiconductor Silicon Supply Monopoly #{rand_id+3}", "short_hook": "One island produces ninety percent of advanced microchips.", "hook_type": "curiosity_gap", "for_format": "both", "subcluster": current_subcluster}
         ]
 
     # ── 4. Pick first topic matching format_type and not a duplicate ─────────

@@ -21,8 +21,7 @@ def vision_rank_broll(
     Scores candidate B-roll thumbnails against the EXACT narration sentence.
     Ranks candidates by semantic fit, not first-provider wins.
     Returns (best_index, match_found).
-    match_found=True means the best available candidate is worth using;
-    final Judge AI can still reject/repair the assembled segment later.
+    Strict zero-score rejection on cosplayers, car showrooms, modern dancers, plush toys, and crypto screens.
     """
     if not thumbnails:
         return None, False
@@ -32,36 +31,38 @@ def vision_rank_broll(
         print("[VisionMatch] Bypassing Vision Match (BYPASS_VISION_MATCH=1). Accepting index 0.")
         return 0, True
 
-    # Build the strict matching prompt
+    # Build the strict matching prompt with airtight zero-score banlist
     prompt_text = (
         f"NARRATION (exact sentence for this video segment):\n"
         f"\"{narration}\"\n\n"
         f"SEARCH QUERY used: \"{query}\"\n\n"
         f"You are evaluating {len(thumbnails)} candidate B-roll image(s) (indexed 0 to {len(thumbnails) - 1}) for the above narration.\n"
-        f"Note: Some candidate images may be a horizontal collage showing 3 sequential frames from the same video. Use this sequence to understand the video motion and content.\n\n"
+        f"Note: Some candidate images may be a horizontal collage showing 3 sequential frames from the same video.\n\n"
         f"SCORING RULES — read carefully:\n"
-        f"1. CRITICAL ZERO-SCORE REJECTION (SCORE = 0 IMMEDIATELY):\n"
+        f"1. CRITICAL ZERO-SCORE REJECTION (SCORE = 0 IMMEDIATELY & REJECT):\n"
+        f"   - ANY candidate showing cosplayers, LARP, amateur costume roleplay, Comic-Con footage, plastic props/armor, or amateur fantasy reenactments.\n"
+        f"   - ANY candidate showing modern car showrooms, indoor car dealerships, vehicle sales floors, or indoor auto expos.\n"
+        f"   - ANY candidate showing indoor modern dancers, contemporary choreography, dance studio rehearsals, stage routines, or ballroom dancing.\n"
+        f"   - ANY candidate showing stuffed toys, plushies, puppet animals, toy jungles, or kid playsets when narration is financial, economic, business, or serious factual news.\n"
+        f"   - ANY candidate showing crypto trading charts, candlestick charts, stock tickers, or day-trading screens when narration is about nature, wildlife, geography, biology, space, or history.\n"
+        f"   - ANY candidate showing generic VJ party particle loops, EDM tunnel visualizers, neon DJ background loops, disco/rave graphics, or abstract motion graphics lacking physical real-world relevance.\n"
         f"   - ANY candidate showing full-screen text, title cards, subtitles, lower-third graphics, channel logos, or text-only slides from the source video.\n"
-        f"   - ANY candidate showing static PowerPoint slides or text banners.\n"
-        f"   - ANY candidate showing black screens, dark loading screens, transition flashes, or fade-outs.\n"
-        f"2. High-quality documentary clips, real-world science demonstrations, expert presenters, historical archive footage, and dynamic physical visuals MUST be accepted (scores 75-95).\n"
+        f"   - ANY candidate showing talking heads, podcast hosts, vloggers, studio hosts, or people speaking to camera.\n"
+        f"   - ANY candidate showing static PowerPoint slides, text banners, black screens, dark loading screens, transition flashes, or fade-outs.\n"
+        f"2. High-quality documentary clips, 4K nature/space visuals, real-world science demonstrations, historical archive footage, and dynamic physical/3D visuals MUST be accepted (scores 75-95).\n"
         f"3. Score every candidate from 0-100:\n"
         f"   - 90-100: exact physical subject or highly specific real-world match (clean active video footage, documentary clip, or 3D science render)\n"
         f"   - 75-89: strong contextual/thematic physical or documentary match of the main subject\n"
         f"   - 50-74: usable fallback active visual related to the topic\n"
-        f"   - 0-49: bad mismatch, static text slide, title card, black screen, or completely unrelated topic\n"
-        f"4. REJECT (SCORE = 0):\n"
-        f"   - Full-screen text, title cards, black screens, or promotional app ads\n"
-        f"   - Static PowerPoint slides or text banners\n"
-        f"5. Pick the highest-scoring candidate even when imperfect, so the pipeline can use the best available real video asset.\n"
-        f"6. Set match_found=false only when the best candidate scores below 50.\n\n"
+        f"   - 0-49: bad mismatch, talking heads, static text slide, title card, black screen, or completely unrelated topic\n"
+        f"4. Set match_found=false whenever the best candidate scores below 50 or triggers any rule in Section 1.\n\n"
         f"Return ONLY valid JSON (no markdown):\n"
         f'{{"best_index": <int or null>, '
         f'"match_found": <bool>, '
         f'"confidence": <0-100 int>, '
         f'"candidate_scores": [<0-100 int for each candidate>], '
         f'"reject_reason": \"<why rejected, or empty string if accepted>\"}}\n\n'
-        f"Set match_found=true if confidence >= 50. Still explain weaknesses in reject_reason if confidence < 70."
+        f"Set match_found=true only if confidence >= 50 and Section 1 bans are clear."
     )
 
     parts = [{"text": prompt_text}]
@@ -124,5 +125,5 @@ def vision_rank_broll(
         return None, False
 
     except Exception as e:
-        print(f"[VisionMatch] API error/rate-limited ({e}). Fallback accepting top candidate 0 to prevent static image fallback.")
-        return 0, True
+        print(f"[VisionMatch] API error/rate-limited ({e}). Strictly returning reject (None, False) to prevent unrelated footage.")
+        return None, False

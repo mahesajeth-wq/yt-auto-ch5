@@ -2,7 +2,7 @@ import os
 
 # Auto-load local_env.sh if present to populate environment variables
 def _autoload_local_env():
-    for env_path in ["local_env.sh", "../local_env.sh", "/root/yt-auto/local_env.sh", "/root/local_env.sh"]:
+    for env_path in ["local_env.sh", "../local_env.sh",  "/root/local_env.sh"]:
         if os.path.exists(env_path):
             try:
                 with open(env_path, "r", encoding="utf-8") as f:
