@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How the Pets.com sock puppet's wildly successful marketing campaign actually masked and accelerated its dot-com bust collapse by obscuring fundamental economic flaws.",
     "How the 'Golden Age' of 1950s advertising, despite its simplicity, established foundational principles of emotional branding and multi-channel marketing that are critically informing today's complex digital strategies.",
     "Australia's \"Big Four\" accounting firms face potential breakup amid escalating scandals, questioning their dual roles.",
     "How the forced breakup of Standard Oil in 1911 inadvertently strengthened its constituent parts, allowing them to evolve into independent global energy titans like Exxon and Mobil, rather than diminishing their collective power.",
@@ -89,8 +88,9 @@
     "The 'Quiet' AI Job Transformation: How AI is reshaping job quality, not just quantity, creating a 'disposable worker' economy as roles shift from execution to supervision and demand new skill sets.",
     "How trillion-dollar tech monopolies exploit **phase transitions** in network effects to achieve irreversible market dominance, like water suddenly turning to ice.",
     "The Unseen Threat: How Fake News Is Manipulating Trillions in Global Stock Markets, causing rapid gains and losses.",
-    "The 'New Rich' vs. 'Old Rich' Investment Divide: Modern Billionaires' Shift to Unconventional Assets as a Key Wealth Strategy."
+    "The 'New Rich' vs. 'Old Rich' Investment Divide: Modern Billionaires' Shift to Unconventional Assets as a Key Wealth Strategy.",
+    "How adding a strategically worse, 'decoy' option can dramatically boost sales of a specific product, exploiting the **Asymmetric Dominance Effect** to manipulate consumer choice."
   ],
-  "subcluster_idx": 3,
-  "call_count": 128
+  "subcluster_idx": 4,
+  "call_count": 129
 }
