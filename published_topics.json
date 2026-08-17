@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How the 'Golden Age' of 1950s advertising, despite its simplicity, established foundational principles of emotional branding and multi-channel marketing that are critically informing today's complex digital strategies.",
     "Australia's \"Big Four\" accounting firms face potential breakup amid escalating scandals, questioning their dual roles.",
     "How the forced breakup of Standard Oil in 1911 inadvertently strengthened its constituent parts, allowing them to evolve into independent global energy titans like Exxon and Mobil, rather than diminishing their collective power.",
     "The unsealed plea of AppliedAI's founder Arya Bolurfrushan reveals how a vast insider trading scheme threatens startup integrity and broader market trust.",
@@ -89,8 +88,9 @@
     "How trillion-dollar tech monopolies exploit **phase transitions** in network effects to achieve irreversible market dominance, like water suddenly turning to ice.",
     "The Unseen Threat: How Fake News Is Manipulating Trillions in Global Stock Markets, causing rapid gains and losses.",
     "The 'New Rich' vs. 'Old Rich' Investment Divide: Modern Billionaires' Shift to Unconventional Assets as a Key Wealth Strategy.",
-    "How adding a strategically worse, 'decoy' option can dramatically boost sales of a specific product, exploiting the **Asymmetric Dominance Effect** to manipulate consumer choice."
+    "How adding a strategically worse, 'decoy' option can dramatically boost sales of a specific product, exploiting the **Asymmetric Dominance Effect** to manipulate consumer choice.",
+    "The convergence of potential transit fees in the Strait of Hormuz, record-low water levels in European rivers like the Rhine, and a new U.S. ban on imported robots is creating an unprecedented 'triple threat' stress test for global supply chains, amplifying logistical costs and disrupting established trade routes simultaneously."
   ],
-  "subcluster_idx": 4,
-  "call_count": 129
+  "subcluster_idx": 5,
+  "call_count": 130
 }
