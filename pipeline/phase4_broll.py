@@ -958,31 +958,36 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
             # Find Node.js path for deciphering signatures
             node_path = "/usr/bin/node" if os.path.exists("/usr/bin/node") else "node"
             
-            # 1. Fetch metadata json to read duration and uploader details
+            # 1. Read duration and uploader details from candidate_info if present
             duration_secs = 0.0
             info = {}
-            try:
-                cmd_info = [
-                    "yt-dlp",
-                    "--dump-json",
-                    "--extractor-args", "youtube:player_client=android,ios,mweb",
-                    "--js-runtimes", f"node:{node_path}",
-                    "--user-agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36",
-                    "--no-check-certificates",
-                    "--socket-timeout", "10",
-                    url
-                ]
-                res_info = subprocess.run(cmd_info, capture_output=True, text=True, check=True, timeout=15)
-                info = json.loads(res_info.stdout)
-                duration_secs = float(info.get("duration", 0.0))
-            except Exception as e:
-                print(f"[B-roll] Warning: Could not retrieve video duration: {e}")
+            if candidate_info and candidate_info.get("duration"):
+                duration_secs = float(candidate_info.get("duration", 0.0))
+            else:
+                try:
+                    cmd_info = [
+                        "yt-dlp",
+                        "--dump-json",
+                        "--extractor-args", "youtube:player_client=android,ios,mweb",
+                        "--js-runtimes", f"node:{node_path}",
+                        "--user-agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36",
+                        "--no-check-certificates",
+                        "--socket-timeout", "8",
+                        url
+                    ]
+                    res_info = subprocess.run(cmd_info, capture_output=True, text=True, check=True, timeout=8)
+                    info = json.loads(res_info.stdout)
+                    duration_secs = float(info.get("duration", 0.0))
+                except Exception as e:
+                    print(f"[B-roll] Warning: Could not retrieve video duration: {e}")
             
-            # 2. Pick a safe start time to skip intro card/logos and stay within EOF bounds
-            start_time = 2.0
-            if duration_secs > 35.0:
-                start_time = 15.0
-            if duration_secs > 0.0 and duration_secs <= 10.0:
+            # 2. Pick dynamic high-action timestamp (skips channel intros, sponsor cards, and logos)
+            start_time = 5.0
+            if duration_secs >= 60.0:
+                start_time = min(duration_secs * 0.30, max(5.0, duration_secs - 15.0))
+            elif duration_secs > 25.0:
+                start_time = 12.0
+            elif duration_secs > 0.0:
                 start_time = 0.0
                 
             end_time = start_time + 10.0
