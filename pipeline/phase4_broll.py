@@ -1234,7 +1234,7 @@ def _pollinations_image(query: str, img_path: str, w: int = 2160, h: int = 3840)
     clean_q = re.sub(r'[^a-zA-Z0-9\s]', '', query).strip()
     
     # Request 4K 2160x3840 for crisp Ken Burns panning
-    req_w, req_h = 2160, 3840
+    req_w, req_h = (w, h) if (w and h) else (1080, 1920)
     encoded_prompt = urllib.parse.quote(f"4k cinematic documentary footage of {clean_q}, hyperrealistic, 8k, detailed, photorealistic, no text, no watermark")
     for model in ["flux", "turbo"]:
         try:
@@ -2018,12 +2018,39 @@ def _has_baked_text_ocr(frame_path: str) -> bool:
             winner = downloaded_results[best_idx]
             winner_idx = best_idx
             print(f"[B-roll] Parallel winner chosen! Source: {winner['label']} (Index: {best_idx})")
+            
+            # Run the video through Hyperframes overlays
+            print(f"[B-roll] Winner video. Running Hyperframes overlays...")
+            _image_to_ken_burns_video(winner["temp_v"], out_path, w, h, duration, niche=channel, caption="")
+            
+            # Copy winner credit metadata if present
+            winner_credit_file = f"output/broll_{segment_index}_{winner_idx}_credit.json"
+            target_credit_file = f"output/broll_{segment_index}_credit.json"
+            if os.path.exists(winner_credit_file):
+                import shutil
+                shutil.copy(winner_credit_file, target_credit_file)
+
+            if used_urls is not None:
+                used_urls.add(winner["video_url"])
+                
+            # Clean up temporary video files
+            for r in downloaded_results:
+                for p in [r["temp_v"], r["temp_f"]]:
+                    if os.path.exists(p):
+                        try:
+                            os.remove(p)
+                        except Exception:
+                            pass
+            return out_path
         else:
             print(f"[B-roll] Segment {segment_index}: Vision match rejected all parallel downloads. Discarding to trigger AI fallback.")
-        
-        # Run the video through Hyperframes overlays
-        print(f"[B-roll] Winner video. Running Hyperframes overlays...")
-        _image_to_ken_burns_video(winner["temp_v"], out_path, w, h, duration, niche=channel, caption="")
+            for r in downloaded_results:
+                for p in [r["temp_v"], r["temp_f"]]:
+                    if os.path.exists(p):
+                        try:
+                            os.remove(p)
+                        except Exception:
+                            pass
         
         # Copy winner credit metadata if present
         winner_credit_file = f"output/broll_{segment_index}_{winner_idx}_credit.json"
