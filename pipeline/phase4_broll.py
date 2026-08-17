@@ -955,6 +955,9 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
         if "youtube.com" in url or "youtu.be" in url:
             print(f"[B-roll] Downloading YouTube video slice using yt-dlp CLI: {url}...")
             
+            # Find Node.js path for deciphering signatures
+            node_path = "/usr/bin/node" if os.path.exists("/usr/bin/node") else "node"
+            
             # 1. Fetch metadata json to read duration and uploader details
             duration_secs = 0.0
             info = {}
@@ -962,13 +965,14 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
                 cmd_info = [
                     "yt-dlp",
                     "--dump-json",
-                    "--extractor-args", "youtube:player_client=android",
+                    "--extractor-args", "youtube:player_client=android,ios,mweb",
+                    "--js-runtimes", f"node:{node_path}",
                     "--user-agent", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36",
                     "--no-check-certificates",
-                    "--socket-timeout", "4",
+                    "--socket-timeout", "10",
                     url
                 ]
-                res_info = subprocess.run(cmd_info, capture_output=True, text=True, check=True, timeout=5)
+                res_info = subprocess.run(cmd_info, capture_output=True, text=True, check=True, timeout=15)
                 info = json.loads(res_info.stdout)
                 duration_secs = float(info.get("duration", 0.0))
             except Exception as e:
@@ -988,12 +992,11 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
                 
             section_arg = f"*{start_time:.1f}-{end_time:.1f}"
             
-            # 3. Try top client extractors in waterfall loop (tv_embedded -> android -> ios -> web_safari)
+            # 3. Try top client extractors in waterfall loop (android,ios,mweb -> mweb,android -> web,mweb)
             clients_to_try = [
-                ("tv_embedded", "Mozilla/5.0 (SMART-TV; Linux; Tizen 6.0) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/4.0 Chrome/76.0.3809.146 TV Safari/537.36"),
-                ("android", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"),
-                ("ios", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1"),
-                ("web_safari", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Safari/605.1.15")
+                ("android,ios,mweb", "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"),
+                ("mweb,android", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1"),
+                ("web,mweb", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36")
             ]
             
             for client_name, user_agent in clients_to_try:
@@ -1001,20 +1004,21 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
                     "yt-dlp",
                     "--download-sections", section_arg,
                     "--extractor-args", f"youtube:player_client={client_name}",
-                    "--format", "bestvideo[height>=720][height<=1080]+bestaudio/bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
+                    "--js-runtimes", f"node:{node_path}",
+                    "--format", "bestvideo[height<=1080]+bestaudio/best[height<=1080]/best",
                     "--merge-output-format", "mp4",
                     "--user-agent", user_agent,
                     "--no-check-certificates",
-                    "--retries", "1",
-                    "--socket-timeout", "4",
+                    "--retries", "2",
+                    "--socket-timeout", "12",
                     "--output", out_path,
                     url
                 ]
                 print(f"[B-roll] Running yt-dlp section download ({client_name} client)...")
                 try:
-                    subprocess.run(cmd_dl, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
+                    subprocess.run(cmd_dl, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
                 except subprocess.TimeoutExpired:
-                    print(f"[B-roll] yt-dlp section download ({client_name}) timed out after 5s.")
+                    print(f"[B-roll] yt-dlp section download ({client_name}) timed out after 30s.")
                 if os.path.exists(out_path) and os.path.getsize(out_path) > 10_000:
                     print(f"[B-roll] YouTube slice download SUCCESS with {client_name} client!")
                     break
@@ -1029,6 +1033,9 @@ def _download_video_robust(url: str, out_path: str, segment_index: int, candidat
                     if vid_match:
                         vid_id = vid_match.group(1)
                         inv_nodes = [
+                            "https://inv.nadeko.net",
+                            "https://invidious.nerdvpn.de",
+                            "https://invidious.private.coffee",
                             "https://inv.tux.pizza",
                             "https://invidious.drgns.space"
                         ]
@@ -2125,7 +2132,7 @@ def _has_baked_text_ocr(frame_path: str) -> bool:
 
     cmd_procedural = [
         "ffmpeg", "-y", "-f", "lavfi",
-        "-i", f"color=c=0x0b1326:s={w}x{h}:d={duration}",
+        "-i", f"mandelbrot=size={w}x{h}:rate=30,trim=duration={duration}",
         "-c:v", "libx264", "-pix_fmt", "yuv420p", out_path
     ]
     subprocess.run(cmd_procedural, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
