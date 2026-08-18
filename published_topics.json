@@ -1,6 +1,5 @@
 {
   "topics": [
-    "The unsealed plea of AppliedAI's founder Arya Bolurfrushan reveals how a vast insider trading scheme threatens startup integrity and broader market trust.",
     "Ford's Massive Recall Amidst Critical Safety Flaws: Over 741,000 vehicles recalled due to a transmission parking defect risking rollaways.",
     "How Coca-Cola's decision to outsource its bottling operations to independent partners, rather than centralize manufacturing, inadvertently created a distributed empire that propelled its global dominance.",
     "The 'Vibe Founding' phenomenon: How AI's democratization of building is shifting startup success from technical prowess to the human-centered skill of curating the right problem to solve.",
@@ -89,8 +88,9 @@
     "How adding a strategically worse, 'decoy' option can dramatically boost sales of a specific product, exploiting the **Asymmetric Dominance Effect** to manipulate consumer choice.",
     "The convergence of potential transit fees in the Strait of Hormuz, record-low water levels in European rivers like the Rhine, and a new U.S. ban on imported robots is creating an unprecedented 'triple threat' stress test for global supply chains, amplifying logistical costs and disrupting established trade routes simultaneously.",
     "SpaceX's $60 Billion Acquisition of AI Coding Platform Cursor Marks Largest Startup Exit in History",
-    "How the **Red Queen Hypothesis** from evolutionary biology explains why the AI arms race between corporations and nations will create relentless, accelerating innovation, forcing constant evolution just to maintain competitive parity, not achieve dominance."
+    "How the **Red Queen Hypothesis** from evolutionary biology explains why the AI arms race between corporations and nations will create relentless, accelerating innovation, forcing constant evolution just to maintain competitive parity, not achieve dominance.",
+    "Apple's ecosystem faces escalating antitrust scrutiny from the Justice Department, challenging its tightly controlled platform and potentially forcing open its lucrative \"walled garden\" strategy."
   ],
-  "subcluster_idx": 0,
-  "call_count": 132
+  "subcluster_idx": 1,
+  "call_count": 133
 }
