@@ -1,6 +1,5 @@
 {
   "topics": [
-    "Australia's \"Big Four\" accounting firms face potential breakup amid escalating scandals, questioning their dual roles.",
     "How the forced breakup of Standard Oil in 1911 inadvertently strengthened its constituent parts, allowing them to evolve into independent global energy titans like Exxon and Mobil, rather than diminishing their collective power.",
     "The unsealed plea of AppliedAI's founder Arya Bolurfrushan reveals how a vast insider trading scheme threatens startup integrity and broader market trust.",
     "Ford's Massive Recall Amidst Critical Safety Flaws: Over 741,000 vehicles recalled due to a transmission parking defect risking rollaways.",
@@ -89,8 +88,9 @@
     "The Unseen Threat: How Fake News Is Manipulating Trillions in Global Stock Markets, causing rapid gains and losses.",
     "The 'New Rich' vs. 'Old Rich' Investment Divide: Modern Billionaires' Shift to Unconventional Assets as a Key Wealth Strategy.",
     "How adding a strategically worse, 'decoy' option can dramatically boost sales of a specific product, exploiting the **Asymmetric Dominance Effect** to manipulate consumer choice.",
-    "The convergence of potential transit fees in the Strait of Hormuz, record-low water levels in European rivers like the Rhine, and a new U.S. ban on imported robots is creating an unprecedented 'triple threat' stress test for global supply chains, amplifying logistical costs and disrupting established trade routes simultaneously."
+    "The convergence of potential transit fees in the Strait of Hormuz, record-low water levels in European rivers like the Rhine, and a new U.S. ban on imported robots is creating an unprecedented 'triple threat' stress test for global supply chains, amplifying logistical costs and disrupting established trade routes simultaneously.",
+    "SpaceX's $60 Billion Acquisition of AI Coding Platform Cursor Marks Largest Startup Exit in History"
   ],
-  "subcluster_idx": 5,
-  "call_count": 130
+  "subcluster_idx": 6,
+  "call_count": 131
 }
