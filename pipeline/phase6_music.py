@@ -108,6 +108,13 @@ def _fetch_freesound_music(topic: str, duration_seconds: int) -> str | None:
     search_url = "https://freesound.org/apiv2/search/text/"
     
     is_history, is_engineering, is_natural = False, False, False
+    channel_env = os.environ.get("CHANNEL_NICHE", "").lower()
+    if channel_env == "nature":
+        is_natural = True
+    elif channel_env == "history":
+        is_history = True
+    elif channel_env == "engineering":
+        is_engineering = True
     try:
         from pipeline.config import HISTORY_SUBCLUSTERS
         is_history = True

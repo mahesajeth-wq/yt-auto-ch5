@@ -16,6 +16,7 @@ jobs:
     timeout-minutes: 180
     env:
       PYTHONUNBUFFERED: "1"
+          CHANNEL_NICHE: "engineering"
       BROLL_SEGMENT_BUDGET_SECONDS: "240"
       JUDGE_MAX_ATTEMPTS: "6"
 

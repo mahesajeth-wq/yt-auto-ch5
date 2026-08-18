@@ -159,35 +159,35 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
             # 1. Slow Cinematic Diagonal Pan Up-Right
             vf_chain = (
                 f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
-                f"crop={w}:{h}:'(in_w-out_w)/2 + (t-{duration}/2)*15':'(in_h-out_h)/2 + (t-{duration}/2)*15',"
+                f"crop={w}:{h}:'max(0, min(in_w-out_w, (in_w-out_w)/2 + (t-{duration}/2)*12))':'max(0, min(in_h-out_h, (in_h-out_h)/2 + (t-{duration}/2)*12))',"
                 f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
             )
         elif motion_idx == 1:
             # 2. Slow Panning Upward
             vf_chain = (
                 f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
-                f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2 + (t-{duration}/2)*22',"
+                f"crop={w}:{h}:'(in_w-out_w)/2':'max(0, min(in_h-out_h, (in_h-out_h)/2 + (t-{duration}/2)*15))',"
                 f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
             )
         elif motion_idx == 2:
             # 3. Slow Panning Downward
             vf_chain = (
                 f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
-                f"crop={w}:{h}:'(in_w-out_w)/2':'(in_h-out_h)/2 - (t-{duration}/2)*22',"
+                f"crop={w}:{h}:'(in_w-out_w)/2':'max(0, min(in_h-out_h, (in_h-out_h)/2 - (t-{duration}/2)*15))',"
                 f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
             )
         elif motion_idx == 3:
             # 4. Slow Panning Right
             vf_chain = (
                 f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
-                f"crop={w}:{h}:'(in_w-out_w)/2 + (t-{duration}/2)*22':'(in_h-out_h)/2',"
+                f"crop={w}:{h}:'max(0, min(in_w-out_w, (in_w-out_w)/2 + (t-{duration}/2)*15))':'(in_h-out_h)/2',"
                 f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
             )
         else:
             # 5. Slow Panning Left
             vf_chain = (
                 f"scale=trunc({w}*1.15/2)*2:trunc({h}*1.15/2)*2:force_original_aspect_ratio=increase,"
-                f"crop={w}:{h}:'(in_w-out_w)/2 - (t-{duration}/2)*22':'(in_h-out_h)/2',"
+                f"crop={w}:{h}:'max(0, min(in_w-out_w, (in_w-out_w)/2 - (t-{duration}/2)*15))':'(in_h-out_h)/2',"
                 f"eq=contrast=1.06:saturation=1.12:gamma=0.96,unsharp=5:5:0.8:5:5:0.4,vignette=angle=0.4,setsar=1" + drawtext_chain
             )
             
