@@ -28,16 +28,16 @@ def select_topic(format_type: str) -> dict:
 
     if is_trending:
         topic_instruction = (
-            f"Use Google Search to find current HIGHLY VIRAL news from the last 24-48 hours about {current_subcluster}. "
-            f"Generate 5 TRENDING topics that are currently exploding on social media or making massive news. "
-            f"Frame each as a timely, highly intriguing analysis."
+            f"Use Google Search to find current HIGHLY VIRAL news from the last 24-48 hours SPECIFICALLY about {current_subcluster}. "
+            f"Generate 5 TRENDING topics strictly within {current_subcluster} that are currently exploding on social media or making massive news. "
+            f"Frame each as a timely, highly intriguing analysis. Strictly preserve this channel's dedicated niche and do NOT generate generic news."
         )
     else:
         topic_instruction = (
             f"Generate 5 EVERGREEN topics about {current_subcluster}. "
-            f"Each must reveal a bizarre, counterintuitive, or little-known science fact "
+            f"Each must reveal a bizarre, counterintuitive, or little-known fact "
             f"that educated adults don't know. Frame as 'What if X happened' or 'How Y actually works'. "
-            f"Every topic MUST name a specific mechanism, theory, machine, or phenomenon — "
+            f"Every topic MUST name a specific mechanism, theory, machine, structure, or phenomenon — "
             f"NOT a vague 'scientists are surprised' hook."
         )
 
@@ -55,8 +55,8 @@ SAFETY & COMPLIANCE CONSTRAINTS (MANDATORY):
 - Avoid political controversies, conspiracy theories, or tragic/graphic events.
 - Focus on educational, curious, and inspiring scientific information.
 
-AVOID: Deep sea creatures, ancient pharaohs, quantum physics formulas, animal habitats.
-FOCUS: Business empires, trillion-dollar tech monopolies, secret billionaire strategies, economic crashes, psychological marketing tricks, corporate rivalries.
+AVOID: Stock market finance, crypto trading, retail business models, biology/animals, ancient history pharaohs, quantum physics math.
+FOCUS: Megaprojects, extreme civil and mechanical engineering, subsea tunnels, super-bridges, colossal machines, aerospace marvels, mega-dams, hypersonic transport, skyscraper wind engineering.
 
 Return ONLY a raw JSON array of objects. No markdown, no preamble.
 Each object must have exactly these fields:
@@ -81,10 +81,11 @@ Each object must have exactly these fields:
         import random, time
         rand_id = int(time.time()) % 1000
         topics_list = [
-            {"topic": f"Standard Oil Monopoly Antitrust Breakup #{rand_id}", "short_hook": "Single monopoly controlled ninety percent of oil.", "hook_type": "curiosity_gap", "for_format": "both", "subcluster": current_subcluster},
-            {"topic": f"Dutch East India Company Mega Corporation Value #{rand_id+1}", "short_hook": "Most valuable company in human history.", "hook_type": "curiosity_gap", "for_format": "both", "subcluster": current_subcluster},
-            {"topic": f"2008 Lehman Brothers Liquidity Contagion Crash #{rand_id+2}", "short_hook": "Global financial markets froze in days.", "hook_type": "curiosity_gap", "for_format": "both", "subcluster": current_subcluster},
-            {"topic": f"TSMC Semiconductor Silicon Supply Monopoly #{rand_id+3}", "short_hook": "One island produces ninety percent of advanced microchips.", "hook_type": "curiosity_gap", "for_format": "both", "subcluster": current_subcluster}
+            {"topic": f"Gotthard Base Tunnel Subterranean Alps Engineering #{rand_id}", "short_hook": "World's deepest railway tunnel carved through Alps.", "hook_type": "curiosity_gap", "for_format": "both", "subcluster": current_subcluster},
+            {"topic": f"Burj Khalifa Tuned Mass Damper Wind Engineering #{rand_id+1}", "short_hook": "How tallest skyscraper survives category 5 winds.", "hook_type": "curiosity_gap", "for_format": "both", "subcluster": current_subcluster},
+            {"topic": f"Danyang-Kunshan Grand Bridge High Speed Rail Engineering #{rand_id+2}", "short_hook": "World's longest bridge spans one hundred miles.", "hook_type": "curiosity_gap", "for_format": "both", "subcluster": current_subcluster},
+            {"topic": f"Bagger 288 Colossal Bucket-Wheel Excavator #{rand_id+3}", "short_hook": "Heaviest land vehicle on Earth digs mountains.", "hook_type": "curiosity_gap", "for_format": "both", "subcluster": current_subcluster},
+            {"topic": f"Three Gorges Dam Hydropower Civil Engineering #{rand_id+4}", "short_hook": "Mega-dam so massive it slows Earth's rotation.", "hook_type": "curiosity_gap", "for_format": "both", "subcluster": current_subcluster}
         ]
 
     # ── 4. Pick first topic matching format_type and not a duplicate ─────────

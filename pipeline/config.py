@@ -88,15 +88,16 @@ THUMBNAIL_LAYOUTS = [
 ]
 
 # topic sub-cluster rotation for Business, Wealth and Tech Monopolies channel
-SCIENCE_SUBCLUSTERS = [
-    "trillion-dollar tech monopolies and corporate power plays",
-    "economic collapses, market crashes and financial bubbles",
-    "secret wealth strategies of historical and modern billionaires",
-    "bizarre business models and marketing psychological tricks",
-    "global supply chain disruptions and resource monopolies",
-    "startup empire ascents and catastrophic corporate bankruptcies",
-    "future of artificial intelligence economics and automation disruption",
+ENGINEERING_SUBCLUSTERS = [
+    "record-breaking megaprojects, colossal skyscrapers and deep architectural foundations",
+    "subsea tunnels, megabridges, underwater highways and seismic engineering",
+    "colossal construction machines, tunnel boring giants and heavy machinery",
+    "deep underground mines, oceanic oil platforms and extreme earthworks",
+    "aerospace engineering, supersonic propulsion, rocket manufacturing and orbital stations",
+    "hydroelectric megadams, nuclear fusion reactors and extreme power grid infrastructure",
+    "extreme transport engineering, high-speed rail, magnetic levitation and hyperloops"
 ]
+SCIENCE_SUBCLUSTERS = ENGINEERING_SUBCLUSTERS
 
 YT_CATEGORY_EDUCATION = "27"
 YT_CATEGORY_SCIENCE   = "28"

@@ -74,7 +74,7 @@ jobs:
           BYPASS_VISION_MATCH: "0"
           DISABLE_HYPERFRAMES: "1"
           DISABLE_YT_UPLOAD: "1"
-          CHANNEL_NICHE: "business"
+          CHANNEL_NICHE: "engineering"
         run: |
           for attempt in 1 2; do
             echo "Generate attempt ${attempt}/2"
