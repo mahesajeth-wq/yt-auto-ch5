@@ -1,6 +1,5 @@
 {
   "topics": [
-    "The 'Vibe Founding' phenomenon: How AI's democratization of building is shifting startup success from technical prowess to the human-centered skill of curating the right problem to solve.",
     "Geopolitical tensions (US-Iran) are driving oil price volatility, creating significant market uncertainty and impacting global economic forecasts.",
     "How Quibi's $1.75 billion investment in mobile-only, portrait-mode content catastrophically failed by misjudging user habits and pandemic shifts to big screens.",
     "The unexpected modern relevance of 1950s straightforward advertising in combating Gen Z's digital ad fatigue, as current trends show a decline in trust for overly saturated online campaigns.",
@@ -89,8 +88,9 @@
     "How the **Red Queen Hypothesis** from evolutionary biology explains why the AI arms race between corporations and nations will create relentless, accelerating innovation, forcing constant evolution just to maintain competitive parity, not achieve dominance.",
     "Apple's ecosystem faces escalating antitrust scrutiny from the Justice Department, challenging its tightly controlled platform and potentially forcing open its lucrative \"walled garden\" strategy.",
     "Former President Donald Trump's meeting with crypto and prediction market executives on August 18, 2026, ahead of a CFTC advisory committee, is sparking speculation about future regulatory landscapes and potential shifts in the volatile cryptocurrency market.",
-    "How **Tunnel Boring Machines (TBMs)** achieve pinpoint navigation underground using **Inertial Guidance Systems** and **laser alignment**, without relying on GPS."
+    "How **Tunnel Boring Machines (TBMs)** achieve pinpoint navigation underground using **Inertial Guidance Systems** and **laser alignment**, without relying on GPS.",
+    "Gotthard Base Tunnel Subterranean Alps Engineering #122"
   ],
-  "subcluster_idx": 3,
-  "call_count": 135
+  "subcluster_idx": 4,
+  "call_count": 136
 }
