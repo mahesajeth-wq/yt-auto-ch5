@@ -118,7 +118,7 @@ def assemble_video(broll_files: list[str], tts_files: list[str], captions_ass: s
                     # High quality procedural mandelbrot animation
                     cmd_synth = [
                         "ffmpeg", "-y", "-f", "lavfi",
-                        "-i", f"mandelbrot=s={w}x{h}:r=30",
+                        "-i", f"gradients=s={w}x{h}:r=30:c0=0x0a2244:c1=0x00d4ff:c2=0xff007f:x0=0:y0=0:x1={w}:y1={h}:speed=0.01",
                         "-t", str(duration),
                         "-c:v", "libx264", "-pix_fmt", "yuv420p", broll_path
                     ]

@@ -51,6 +51,12 @@ Narration Style Requirements :
 5. No Fluff: Get straight to the mind-blowing science. Every word must justify its existence.
 
 COMPANION LAYER - NICHE & FORMAT UPGRADE (SHORT):
+- MANDATORY STARTLING UNKNOWN FACT (THE "I DIDN'T KNOW THAT!" FACTOR):
+  * Every single script MUST reveal at least ONE specific, counterintuitive, little-known mechanism or hidden physical reality that educated adults do NOT know.
+  * FORBIDDEN: Superficial textbook summaries (e.g., "whales are big", "pyramids are stone", "tunnels go under mountains", "black holes are dark").
+  * REQUIRED: The startling, precise hidden detail (e.g., "a sperm whale's spermaceti oil hardens into solid wax at deep cold depths to act as an automated buoyancy anchor", "the Great Pyramid has eight concave faces only visible from the sky on the exact equinox afternoon", "subsea tunnel boring machines freeze groundwater into a solid ice wall with liquid nitrogen so workers don't drown", "quantum lasers freeze atom kinetic momentum to near absolute zero").
+  * This unknown insight MUST be the central reveal in Segment 2 or 3 that delivers on the opening hook!
+
 - FORMAT RULE (20-30s Shorts): The entire video IS the hook. Hook, content, and payoff happen simultaneously.
   * Grab (0-3s): One powerful statement, visual, or question. No intro. No channel name. No fluff.
   * Deliver (3-20s): The actual value/story/reveal. Fast. Dense. No filler.
@@ -167,6 +173,12 @@ Structure the narrative into:
 - Closing CTA & link (segments 17-18)
 
 COMPANION LAYER - NICHE & FORMAT UPGRADE (LONG):
+- MANDATORY STARTLING UNKNOWN FACT (THE "I DIDN'T KNOW THAT!" FACTOR):
+  * Every single script MUST reveal at least ONE specific, counterintuitive, little-known mechanism or hidden physical reality that educated adults do NOT know.
+  * FORBIDDEN: Superficial textbook summaries (e.g., "whales are big", "pyramids are stone", "tunnels go under mountains", "black holes are dark").
+  * REQUIRED: The startling, precise hidden detail (e.g., "a sperm whale's spermaceti oil hardens into solid wax at deep cold depths to act as an automated buoyancy anchor", "the Great Pyramid has eight concave faces only visible from the sky on the exact equinox afternoon", "subsea tunnel boring machines freeze groundwater into a solid ice wall with liquid nitrogen so workers don't drown", "quantum lasers freeze atom kinetic momentum to near absolute zero").
+  * This unknown insight MUST be the central reveal in Segment 2 or 3 that delivers on the opening hook!
+
 - FORMAT RULE (5-6 Min Long): Tight format. Only room for one idea developed properly. No detours, no filler. Get there fast, go deep. Target exactly 15 to 18 segments, each targeting 18-22 seconds (or 35-45 words) of narration.
   * Hook (0:00-0:20, segments 1-2): Most powerful moment first. No intro, no fluff.
   * Context (0:20-0:45, segment 3): Minimum context needed. Nothing more.
