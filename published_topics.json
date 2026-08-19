@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How Coca-Cola's decision to outsource its bottling operations to independent partners, rather than centralize manufacturing, inadvertently created a distributed empire that propelled its global dominance.",
     "The 'Vibe Founding' phenomenon: How AI's democratization of building is shifting startup success from technical prowess to the human-centered skill of curating the right problem to solve.",
     "Geopolitical tensions (US-Iran) are driving oil price volatility, creating significant market uncertainty and impacting global economic forecasts.",
     "How Quibi's $1.75 billion investment in mobile-only, portrait-mode content catastrophically failed by misjudging user habits and pandemic shifts to big screens.",
@@ -89,8 +88,9 @@
     "SpaceX's $60 Billion Acquisition of AI Coding Platform Cursor Marks Largest Startup Exit in History",
     "How the **Red Queen Hypothesis** from evolutionary biology explains why the AI arms race between corporations and nations will create relentless, accelerating innovation, forcing constant evolution just to maintain competitive parity, not achieve dominance.",
     "Apple's ecosystem faces escalating antitrust scrutiny from the Justice Department, challenging its tightly controlled platform and potentially forcing open its lucrative \"walled garden\" strategy.",
-    "Former President Donald Trump's meeting with crypto and prediction market executives on August 18, 2026, ahead of a CFTC advisory committee, is sparking speculation about future regulatory landscapes and potential shifts in the volatile cryptocurrency market."
+    "Former President Donald Trump's meeting with crypto and prediction market executives on August 18, 2026, ahead of a CFTC advisory committee, is sparking speculation about future regulatory landscapes and potential shifts in the volatile cryptocurrency market.",
+    "How **Tunnel Boring Machines (TBMs)** achieve pinpoint navigation underground using **Inertial Guidance Systems** and **laser alignment**, without relying on GPS."
   ],
-  "subcluster_idx": 2,
-  "call_count": 134
+  "subcluster_idx": 3,
+  "call_count": 135
 }
