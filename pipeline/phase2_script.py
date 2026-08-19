@@ -51,6 +51,12 @@ Narration Style Requirements :
 5. No Fluff: Get straight to the mind-blowing science. Every word must justify its existence.
 
 COMPANION LAYER - NICHE & FORMAT UPGRADE (SHORT):
+- CLARITY & ACCESSIBILITY RULE (SIMPLE & INTRIGUING, ZERO PHD JARGON):
+  * Explain the mind-blowing mechanism using simple, vivid, conversational words and tangible physical comparisons.
+  * FORBIDDEN: Academic jargon, dense textbook terminology, or abstract PhD words (e.g., do NOT say 'thermodynamic equilibrium', 'homeostatic regulation', 'hydrostatic barometric differential').
+  * REQUIRED: Describe what physically HAPPENS in punchy, visual language (e.g., 'lasers shoot light particles to smack hot atoms until they freeze completely still', 'water pressure heavy enough to crush a steel submarine like an aluminum soda can', 'giant drill heads hotter than boiling soup').
+  * A 12-year-old must understand the core revelation instantly while feeling genuinely mind-blown.
+
 - MANDATORY STARTLING UNKNOWN FACT (THE "I DIDN'T KNOW THAT!" FACTOR):
   * Every single script MUST reveal at least ONE specific, counterintuitive, little-known mechanism or hidden physical reality that educated adults do NOT know.
   * FORBIDDEN: Superficial textbook summaries (e.g., "whales are big", "pyramids are stone", "tunnels go under mountains", "black holes are dark").
@@ -173,6 +179,12 @@ Structure the narrative into:
 - Closing CTA & link (segments 17-18)
 
 COMPANION LAYER - NICHE & FORMAT UPGRADE (LONG):
+- CLARITY & ACCESSIBILITY RULE (SIMPLE & INTRIGUING, ZERO PHD JARGON):
+  * Explain the mind-blowing mechanism using simple, vivid, conversational words and tangible physical comparisons.
+  * FORBIDDEN: Academic jargon, dense textbook terminology, or abstract PhD words (e.g., do NOT say 'thermodynamic equilibrium', 'homeostatic regulation', 'hydrostatic barometric differential').
+  * REQUIRED: Describe what physically HAPPENS in punchy, visual language (e.g., 'lasers shoot light particles to smack hot atoms until they freeze completely still', 'water pressure heavy enough to crush a steel submarine like an aluminum soda can', 'giant drill heads hotter than boiling soup').
+  * A 12-year-old must understand the core revelation instantly while feeling genuinely mind-blown.
+
 - MANDATORY STARTLING UNKNOWN FACT (THE "I DIDN'T KNOW THAT!" FACTOR):
   * Every single script MUST reveal at least ONE specific, counterintuitive, little-known mechanism or hidden physical reality that educated adults do NOT know.
   * FORBIDDEN: Superficial textbook summaries (e.g., "whales are big", "pyramids are stone", "tunnels go under mountains", "black holes are dark").
