@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How Quibi's $1.75 billion investment in mobile-only, portrait-mode content catastrophically failed by misjudging user habits and pandemic shifts to big screens.",
     "The unexpected modern relevance of 1950s straightforward advertising in combating Gen Z's digital ad fatigue, as current trends show a decline in trust for overly saturated online campaigns.",
     "How KPMG Australia's recent accounting scandal, involving partner investigations and CEO resignation, mirrors previous 'Big Four' ethical failures, raising questions about systemic issues in the audit industry.",
     "How DuPont's \"miracle fiber\" Nylon was nearly confined to military uses, only finding its true, massive consumer market after an accidental internal discovery and subsequent \"Nylon Riots\" during its limited launch.",
@@ -89,8 +88,9 @@
     "Former President Donald Trump's meeting with crypto and prediction market executives on August 18, 2026, ahead of a CFTC advisory committee, is sparking speculation about future regulatory landscapes and potential shifts in the volatile cryptocurrency market.",
     "How **Tunnel Boring Machines (TBMs)** achieve pinpoint navigation underground using **Inertial Guidance Systems** and **laser alignment**, without relying on GPS.",
     "Gotthard Base Tunnel Subterranean Alps Engineering #122",
-    "SpaceX's unprecedented launch cadence in 2026, exceeding 100 orbital missions by August 19, alongside rapid advancements in Starship V3, Raptor 3 engines, and the Terafab facility, is accelerating the vision for orbital data centers and Mars colonization."
+    "SpaceX's unprecedented launch cadence in 2026, exceeding 100 orbital missions by August 19, alongside rapid advancements in Starship V3, Raptor 3 engines, and the Terafab facility, is accelerating the vision for orbital data centers and Mars colonization.",
+    "How the immense weight of water in some hydroelectric megadams can, counterintuitively, trigger earthquakes through a phenomenon called **Reservoir-Induced Seismicity (RIS)**, reactivating ancient fault lines."
   ],
-  "subcluster_idx": 5,
-  "call_count": 137
+  "subcluster_idx": 6,
+  "call_count": 138
 }
