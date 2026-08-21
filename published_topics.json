@@ -1,6 +1,5 @@
 {
   "topics": [
-    "Kia's recurring Telluride SUV fire risk after previous repair attempts, triggering a new recall for nearly 463,000 vehicles and urging owners to park outside.",
     "How 3M's '15% rule' and internal 'bootlegging' culture accidentally created the Post-it Note, a solution without a problem for years, before becoming a global staple.",
     "The accelerating trend of Big Tech layoffs, with executives increasingly citing AI as the primary driver, has sparked a heated debate on whether AI is a genuine cause for workforce reduction or a convenient scapegoat for broader corporate restructuring.",
     "How escalating geopolitical tensions in the Strait of Hormuz are triggering immediate market retreats and driving up global oil prices, creating a new wave of investor risk aversion.",
@@ -89,8 +88,9 @@
     "A recent European Commission study indicates hyperloop technology is maturing, moving from prototype to demonstration, with a pilot project planned to establish common safety requirements and overcome regulatory fragmentation.",
     "Imperial College London and Arup's new skyscraper design utilizes a building's own mass to significantly reduce movement during high winds and earthquakes, enhancing safety and sustainability in tall structures.",
     "How \"underwater highways\" like the Chesapeake Bay Bridge-Tunnel are built by precisely *sinking* massive, buoyant concrete tube sections using controlled **ballasting**, rather than digging through the seabed.",
-    "Autonomous heavy machinery, equipped with AI and LiDAR, is now being deployed on real-world construction sites, revolutionizing efficiency and addressing labor shortages."
+    "Autonomous heavy machinery, equipped with AI and LiDAR, is now being deployed on real-world construction sites, revolutionizing efficiency and addressing labor shortages.",
+    "Autonomous deep-sea robots are redefining mineral extraction, enabling selective polymetallic nodule mining with significantly reduced environmental impact, as NOAA advances the first commercial recovery application."
   ],
-  "subcluster_idx": 3,
-  "call_count": 142
+  "subcluster_idx": 4,
+  "call_count": 143
 }
