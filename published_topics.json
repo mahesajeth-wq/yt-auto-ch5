@@ -1,6 +1,5 @@
 {
   "topics": [
-    "How 3M's '15% rule' and internal 'bootlegging' culture accidentally created the Post-it Note, a solution without a problem for years, before becoming a global staple.",
     "The accelerating trend of Big Tech layoffs, with executives increasingly citing AI as the primary driver, has sparked a heated debate on whether AI is a genuine cause for workforce reduction or a convenient scapegoat for broader corporate restructuring.",
     "How escalating geopolitical tensions in the Strait of Hormuz are triggering immediate market retreats and driving up global oil prices, creating a new wave of investor risk aversion.",
     "How Webvan's ambitious, vertically integrated grocery delivery service collapsed despite a prescient vision, by building massive infrastructure decades before the market was ready.",
@@ -89,8 +88,9 @@
     "Imperial College London and Arup's new skyscraper design utilizes a building's own mass to significantly reduce movement during high winds and earthquakes, enhancing safety and sustainability in tall structures.",
     "How \"underwater highways\" like the Chesapeake Bay Bridge-Tunnel are built by precisely *sinking* massive, buoyant concrete tube sections using controlled **ballasting**, rather than digging through the seabed.",
     "Autonomous heavy machinery, equipped with AI and LiDAR, is now being deployed on real-world construction sites, revolutionizing efficiency and addressing labor shortages.",
-    "Autonomous deep-sea robots are redefining mineral extraction, enabling selective polymetallic nodule mining with significantly reduced environmental impact, as NOAA advances the first commercial recovery application."
+    "Autonomous deep-sea robots are redefining mineral extraction, enabling selective polymetallic nodule mining with significantly reduced environmental impact, as NOAA advances the first commercial recovery application.",
+    "How **Scramjet engines** achieve propulsion at hypersonic speeds (Mach 5+) with virtually no moving parts, relying entirely on extreme aerodynamic compression and **supersonic combustion** to create thrust, a counterintuitive feat of propulsion design."
   ],
-  "subcluster_idx": 4,
-  "call_count": 143
+  "subcluster_idx": 5,
+  "call_count": 144
 }
