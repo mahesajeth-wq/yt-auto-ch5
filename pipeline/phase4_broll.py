@@ -1205,9 +1205,9 @@ def _image_to_ken_burns_video(img_path: str, out_path: str, w: int, h: int, dura
     if is_video:
         print(f"[B-roll] Normalizing video asset: {img_path} -> {out_path}")
         cmd = [
-            "ffmpeg", "-y", "-i", img_path,
+            "ffmpeg", "-y", "-stream_loop", "-1", "-i", img_path,
             "-vf", f"scale=trunc({w}/2)*2:trunc({h}/2)*2:force_original_aspect_ratio=increase,crop={w}:{h},setsar=1",
-            "-t", str(duration), "-r", "30",
+            "-t", f"{duration:.3f}", "-r", "30",
             "-c:v", "libx264", "-preset", "fast", "-crf", "20", "-pix_fmt", "yuv420p",
             "-an", out_path
         ]
@@ -2063,26 +2063,6 @@ def _has_baked_text_ocr(frame_path: str) -> bool:
                             os.remove(p)
                         except Exception:
                             pass
-        
-        # Copy winner credit metadata if present
-        winner_credit_file = f"output/broll_{segment_index}_{winner_idx}_credit.json"
-        target_credit_file = f"output/broll_{segment_index}_credit.json"
-        if os.path.exists(winner_credit_file):
-            import shutil
-            shutil.copy(winner_credit_file, target_credit_file)
-
-        if used_urls is not None:
-            used_urls.add(winner["video_url"])
-            
-        # Clean up all files
-        for r in downloaded_results:
-            for p in [r["temp_v"], r["temp_f"]]:
-                if os.path.exists(p):
-                    try:
-                        os.remove(p)
-                    except Exception:
-                        pass
-        return out_path
 
     # ── Fallback 2: image sources (all converted with Ken Burns) ─────────────────────
     print(f"[B-roll] Segment {segment_index}: trying image sources…")

@@ -102,12 +102,20 @@ class _KeyPool:
                     idx = int(idx_str)
                     if 0 <= idx < len(self._keys):
                         status = info.get("status", "active")
-                        self._statuses[idx] = status
-                        self._failures[idx] = info.get("failures", 0)
+                        cd_until = float(info.get("cooldown_until", 0.0))
                         
-                        cd_until = info.get("cooldown_until", 0.0)
+                        # Auto-recover daily_exhausted keys if cooldown expired
+                        if status == "daily_exhausted" and (cd_until == 0.0 or now >= cd_until):
+                            status = "active"
+                            cd_until = 0.0
+                            
+                        self._statuses[idx] = status
+                        self._failures[idx] = info.get("failures", 0) if status == "disabled" else 0
+                        
                         if cd_until > now:
                             self._cooldowns[idx] = cd_until
+                        else:
+                            self._cooldowns[idx] = 0.0
             except Exception as e:
                 print(f"Warning: Failed to load key pool state: {e}")
 
@@ -172,18 +180,11 @@ class _KeyPool:
                 cooldown_duration = reset_time - now
                 self._cooldowns[idx] = reset_time
         else:
-            # Transient rate limit (RPM/TPM) or server error
+            # Transient rate limit (RPM/TPM) or server error -> short backoff, stay active
             self._failures[idx] += 1
-            if self._failures[idx] >= 2:
-                # 2 consecutive failures -> mark daily_exhausted to prevent tight loops
-                self._statuses[idx] = "daily_exhausted"
-                reset_time = _get_next_daily_reset_time()
-                cooldown_duration = reset_time - now
-                self._cooldowns[idx] = reset_time
-            else:
-                self._statuses[idx] = "active"
-                cooldown_duration = 120.0 if status_code in (429, 0) else 10.0
-                self._cooldowns[idx] = now + cooldown_duration
+            self._statuses[idx] = "active"
+            cooldown_duration = 20.0 if status_code in (429, 0) else 5.0
+            self._cooldowns[idx] = now + cooldown_duration
 
         slot = idx + 1
         print(f"[KeyPool] Key slot {slot}/{len(self._keys)} marked failed (status {status_code}, status_label={self._statuses[idx]}, transient={transient}). Cooldown for {cooldown_duration:.0f}s (Until: {time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime(self._cooldowns[idx]))})")
@@ -320,9 +321,8 @@ def _post_with_rotation(
                         print(f"[GeminiClient] 429 on slot {slot}: raw={resp.text[:200]}")
 
                     if _is_daily_quota_exhausted(resp):
-                        print(f"[GeminiClient] 429 rate limit on slot {slot}. Cooldown 15s & rotating key...")
-                        _shared_pool.mark_failed(key, 429, transient=True)
-                        _shared_pool._idx += 1
+                        print(f"[GeminiClient] 429 rate limit on slot {slot}. Daily quota exhausted, rotating key...")
+                        _shared_pool.mark_failed(key, 429, transient=False)
                         break  # Break inner loop to rotate key
                     else:
                         # RPM limit: retry with backoff or rotate if out of attempts
@@ -334,7 +334,6 @@ def _post_with_rotation(
                         else:
                             print(f"[GeminiClient] 429 RPM limit persisted on key slot {slot}. Rotating…")
                             _shared_pool.mark_failed(key, 429, transient=True)
-                            _shared_pool._idx += 1
                             break
                             
                 elif resp.status_code in (500, 502, 503, 504):
@@ -346,7 +345,6 @@ def _post_with_rotation(
                     else:
                         print(f"[GeminiClient] {resp.status_code} persisted on key slot {slot}. Rotating…")
                         _shared_pool.mark_failed(key, resp.status_code, transient=True)
-                        _shared_pool._idx += 1
                         break
                         
                 elif resp.status_code in (400, 403):

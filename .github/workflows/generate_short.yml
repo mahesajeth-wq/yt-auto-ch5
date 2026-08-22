@@ -23,7 +23,7 @@ jobs:
     env:
       PYTHONUNBUFFERED: "1"
       BROLL_SEGMENT_BUDGET_SECONDS: "180"
-      JUDGE_MAX_ATTEMPTS: "6"
+      JUDGE_MAX_ATTEMPTS: "3"
 
     steps:
       - uses: actions/checkout@v4
@@ -57,7 +57,7 @@ jobs:
         run: pip install -r requirements.txt && pip install -U --pre "yt-dlp[default]"
 
       - name: Generate Short
-        timeout-minutes: 45
+        timeout-minutes: 50
         env:
           GEMINI_API_KEY:    ${{ secrets.GEMINI_API_KEY }}
           PEXELS_API_KEY:    ${{ secrets.PEXELS_API_KEY }}
@@ -82,7 +82,7 @@ jobs:
             if [ "$attempt" -gt 1 ] && [ -d output ]; then
               resume_arg="--resume"
             fi
-            timeout 20m python run_generate.py --format short $resume_arg && exit 0
+            timeout 24m python run_generate.py --format short $resume_arg && exit 0
             code=$?
             if [ "$code" -eq 124 ]; then
               echo "Generate attempt ${attempt} timed out"

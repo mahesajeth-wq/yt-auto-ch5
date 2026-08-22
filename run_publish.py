@@ -117,8 +117,8 @@ def main():
                 if fc_data:
                     credits_str = "\n\n--- FOOTAGE CREDITS (Educational Fair Use) ---\n"
                     for fc_item in fc_data:
-                        handle = fc_item.get("uploader_handle") or fc_item.get("uploader_name") or "@YouTube"
-                        v_url = fc_item.get("video_url") or ""
+                        handle = fc_item.get("handle") or fc_item.get("uploader_handle") or fc_item.get("uploader_name") or "@YouTube"
+                        v_url = fc_item.get("url") or fc_item.get("video_url") or ""
                         credits_str += f"Source: {handle} - {v_url}\n"
                     curr_desc = metadata.get("description", "") or ""
                     metadata["description"] = curr_desc + credits_str

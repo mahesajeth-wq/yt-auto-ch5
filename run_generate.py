@@ -1,11 +1,11 @@
-import os
-os.environ["DISABLE_HYPERFRAMES"] = "1"
 import argparse
 import json
 import os
 import sys
 import traceback
 import subprocess
+
+os.environ["DISABLE_HYPERFRAMES"] = "1"
 
 from pipeline.config import validate_config
 import pipeline.phase1_topics as phase1
@@ -186,7 +186,7 @@ def main():
             ]
         }
         
-        max_attempts = int(os.environ.get("JUDGE_MAX_ATTEMPTS", "6"))
+        max_attempts = int(os.environ.get("JUDGE_MAX_ATTEMPTS", "3"))
         attempt = 1
         
         while attempt <= max_attempts:
@@ -286,6 +286,27 @@ def main():
             final_video = phase7.assemble_video(broll_files, audio_files, captions_ass, music_path, script, args.format)
             attempt += 1
         
+        # Verify final video health before proceeding
+        ok, health_reason = _video_health_ok(final_video)
+        if not ok:
+            print(f"[Generate] Warning: Final video health issue ({health_reason}). Re-assembling with fresh clean visual motion...")
+            for idx in range(len(script["segments"])):
+                old_b = f"output/broll_{idx}.mp4"
+                if os.path.exists(old_b):
+                    try:
+                        os.remove(old_b)
+                    except Exception:
+                        pass
+                seg = script["segments"][idx]
+                dur = tts_durations[idx] if tts_durations else 6.0
+                prompt_clean = f"4k cinematic documentary footage of {seg.get('broll_query') or seg.get('narration')}, photorealistic, 8k, detailed"
+                from pipeline.phase4_broll import _pollinations_image, _image_to_ken_burns_video
+                s_img = f"output/recover_img_{idx}.jpg"
+                if _pollinations_image(prompt_clean, s_img, w=2160, h=3840):
+                    _image_to_ken_burns_video(s_img, old_b, 1080 if args.format == "short" else 1920, 1920 if args.format == "short" else 1080, duration=dur)
+                broll_files[idx] = old_b
+            final_video = phase7.assemble_video(broll_files, audio_files, captions_ass, music_path, script, args.format)
+
         print("[Phase 8] Generating thumbnail...")
         thumb_text = script.get("thumbnail_text") or script.get("title") or "SECRET REVEALED"
         thumbnail = phase8.generate_thumbnail(final_video, thumb_text, topic_prompt=script.get("title", ""))
